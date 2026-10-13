@@ -1,0 +1,10 @@
+{
+  "reference_boundaries": 571,
+  "paired_boundaries": 526,
+  "coarse_abs_median_s": 31.57781344760224,
+  "coarse_abs_p95_s": 57.9197360556276,
+  "coarse_abs_max_s": 59.97986551156191,
+  "refined_abs_median_s": 2.2372626062860945e-07,
+  "refined_abs_p95_s": 4.262519723852165e-07,
+  "refined_abs_max_s": 4.462344804778695e-07
+}

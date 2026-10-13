@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+*.log
+*.tmp
+*.swp
+*.bak
+
+# Local/generated reruns and intermediate snapshots
+m1_validation/new_run/
+m1_validation/pilot_optimized/
+m1_validation/final/report_draft_v1/
+m1_validation/final/source_snapshot/
+
+# Large raw generated window tables
+m1_validation/final/scale_*/windows.csv
+m1_validation/final/scale_*/coarse_windows.csv
+m1_validation/final/scale_*/anomalies.jsonl
+m1_validation/final/standalone_smoke_*

@@ -1,0 +1,13 @@
+{
+  "measurement_kind": "actual",
+  "all_unclipped_count": 370029,
+  "all_clipped_count": 11007,
+  "audited_windows": 40,
+  "shortest_unclipped_duration_s": 0.4954602774523664,
+  "shortest_unclipped_norad_id": "35248",
+  "shortest_unclipped_station_id": "8",
+  "audited_windows_without_coarse_overlap": 39,
+  "violations": 0,
+  "propagation_error_samples": 0,
+  "max_sampling_gap_s": 0.009999922884162515
+}

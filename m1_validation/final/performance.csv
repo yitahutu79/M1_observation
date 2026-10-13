@@ -1,0 +1,4 @@
+targets,elapsed_s,generation_s,validation_s,peak_rss_mib,coarse_windows,candidate_windows,refined_windows,sampled_valid,unresolved,propagation_failure_count,generation_error_samples,validator_error_samples,refinement_success_rate,numeric_validation_pass_rate
+100,7.260133957955986,1.345253660925664,5.9140147950383835,82.203125,436,436,436,436,0,0,0,0,1.0,1.0
+1000,80.84707204200095,14.130415946186986,66.70451129344292,81.703125,4790,4792,4792,4792,0,0,0,0,1.0,1.0
+10000,647.0597795830108,154.86896353587508,492.0457186657004,84.140625,372457,381036,381036,381036,0,0,0,0,1.0,1.0

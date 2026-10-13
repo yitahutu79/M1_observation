@@ -1,0 +1,7 @@
+data_kind,expected_duration_s,coarse_detected,discovery_grid_detected,recovered_count,anomaly_count,start_abs_error_s,end_abs_error_s
+synthetic_analytic_case,0.2,False,False,1,0,2.0208445050684531e-07,3.689399505901747e-07
+synthetic_analytic_case,1,False,False,1,0,3.600738267550696e-07,4.219865701315939e-07
+synthetic_analytic_case,3,False,False,1,0,3.1991966409350425e-07,9.566120695581048e-08
+synthetic_analytic_case,10,False,False,1,0,1.7938012319973495e-07,1.2859378273333277e-07
+synthetic_analytic_case,25,True,True,1,0,4.172325418494438e-08,3.397464780618975e-07
+synthetic_analytic_case,45,True,True,1,0,2.5629996969200874e-07,2.5629996969200874e-07
