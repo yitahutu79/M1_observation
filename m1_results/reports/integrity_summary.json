@@ -1,0 +1,23 @@
+{
+  "A_count": 3499031,
+  "B_count": 66,
+  "C_count": 1655169,
+  "C_ge_120": 1034358,
+  "A_invalid_time": 0,
+  "B_invalid_time": 0,
+  "C_invalid_time": 0,
+  "A_duplicates": 0,
+  "C_duplicates": 0,
+  "C_overlaps": 0,
+  "C_A_containment_failures": 0,
+  "C_B_containment_failures": 0,
+  "target_status_count": 10000,
+  "target_status_unique": 10000,
+  "target_status_distribution": {
+    "has_windows": 9867,
+    "full_sampled_propagation_failure": 107,
+    "partial_sampled_propagation_failure": 26
+  },
+  "propagation_error_targets": 133,
+  "anomaly_targets": 133
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": "formal-m1-cache-2.1",
+  "layer": "B_night",
+  "configuration_fingerprint": "ad493f4728cf7c91b04206e609f7acf5471157918a513ae160d34f26c87835e4",
+  "source_windows_sha256": "52393742eea973397723108a5b46dfd4f67af9f4bc27252e4edcc986b424c13b",
+  "source_manifest_present": false,
+  "inputs": {
+    "stations_sha256": "f34dcb2d3f1932ad37c5030df430ac0e5ed4c7e1ee93d3d0d7198a0efda095e6",
+    "ephemeris_sha256": "a20a7139da04cbc462454634918e9a9ca69127044e2cc9d4f9c16e238d2deedc"
+  },
+  "planning": {
+    "start_utc": "2026-10-01T00:00:00+00:00",
+    "end_utc": "2026-10-07T00:00:00+00:00",
+    "time_scale": "UTC"
+  },
+  "algorithm": {
+    "coarse_step_s": 60,
+    "sun_altitude_threshold_deg": -6,
+    "boundary_method": "Skyfield Brent root"
+  },
+  "validation": {
+    "window_count": 66,
+    "checked_boundaries": 120,
+    "max_boundary_residual_deg": 2.0496475627851396e-09,
+    "max_midpoint_solar_altitude_deg": -7.273127655671646
+  },
+  "windows_sha256": "52393742eea973397723108a5b46dfd4f67af9f4bc27252e4edcc986b424c13b"
+}

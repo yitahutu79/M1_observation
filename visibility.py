@@ -13,6 +13,8 @@ class NumericPolicy:
     min_elevation_deg: float = 10.0
     max_elevation_deg: float = 85.0
     max_iterations: int = 64
+    adaptive_min_step_s: float = 1.0
+    discovery_curvature_deg: float = 0.05
 
 class PropagationError(RuntimeError):
     pass
@@ -22,6 +24,7 @@ class Geometry:
     def __init__(self, ts, start, stations):
         self.ts, self.epoch = ts, ts.from_datetime(start)
         self.stations = stations
+        self._prepared_regular_grids = {}
         lon = np.radians([s['lon'] for s in stations])
         lat = np.radians([s['lat'] for s in stations])
         h = np.array([s['elevation_m'] for s in stations]) / 1000
@@ -36,14 +39,26 @@ class Geometry:
         return self.ts.tt_jd(self.epoch.whole, self.epoch.tt_fraction + np.asarray(seconds)/86400)
 
     def prepare(self, seconds):
+        seconds = np.asarray(seconds)
+        cache_key = None
+        if len(seconds) >= 2:
+            step = float(seconds[1] - seconds[0])
+            if np.allclose(np.diff(seconds), step, rtol=0, atol=1e-12):
+                cache_key = (len(seconds), float(seconds[0]), float(seconds[-1]), step)
+                cached = self._prepared_regular_grids.get(cache_key)
+                if cached is not None:
+                    return cached
         t = self.times(seconds)
         # Vallado GMST1982, UT1 from the pinned Skyfield builtin timescale.
         centuries = (t.whole - 2451545.0 + t.ut1_fraction) / 36525
         g = 67310.54841 + (8640184.812866 + (.093104 - 6.2e-6*centuries)*centuries)*centuries
         theta = ((t.whole % 1 + t.ut1_fraction + (g/86400) % 1) % 1) * 2*np.pi
-        return (np.ascontiguousarray(t.whole),
-                np.ascontiguousarray(t.tai_fraction-t._leap_seconds()/86400),
-                np.cos(theta), np.sin(theta))
+        result = (np.ascontiguousarray(t.whole),
+                  np.ascontiguousarray(t.tai_fraction-t._leap_seconds()/86400),
+                  np.cos(theta), np.sin(theta))
+        if cache_key is not None:
+            self._prepared_regular_grids[cache_key] = result
+        return result
 
 class OrbitEvaluator:
     def __init__(self, record, geometry):
@@ -51,6 +66,7 @@ class OrbitEvaluator:
         self.sat = Satrec.twoline2rv(record[1], record[2])
         self.evaluations = self.error_samples = 0
         self.error_codes = {}
+        self.error_intervals = []
 
     def positions(self, seconds, prepared=None):
         seconds = np.atleast_1d(seconds).astype(float)
@@ -61,6 +77,13 @@ class OrbitEvaluator:
         self.error_samples += int(bad.sum())
         for code, count in zip(*np.unique(errors[bad], return_counts=True)):
             self.error_codes[str(int(code))] = self.error_codes.get(str(int(code)), 0) + int(count)
+        # Sampled runs, not a claim that the entire continuous interval failed.
+        labels = np.where(bad, np.where(errors != 0, errors.astype(int), -1), 0)
+        edges = np.r_[0, np.flatnonzero(labels[1:] != labels[:-1])+1, len(labels)]
+        for a,b in zip(edges[:-1],edges[1:]):
+            if labels[a]:
+                self.error_intervals.append(dict(start_s=float(np.min(seconds[a:b])),end_s=float(np.max(seconds[a:b])),
+                    times_s=seconds[a:b].tolist(),code=int(labels[a]),samples=int(b-a),scope='sampled_run'))
         fixed = np.column_stack([c*r[:,0]+s*r[:,1], -s*r[:,0]+c*r[:,1], r[:,2]])
         fixed[bad] = np.nan
         return fixed
@@ -94,7 +117,7 @@ def coarse_windows(times, elevations, p):
             if times[end]>times[begin]: result.append(dict(site=site,start_s=float(times[begin]),end_s=float(times[end])))
     return result
 
-def refine_windows(evaluate, times, elevations, p=NumericPolicy()):
+def refine_windows_legacy(evaluate, times, elevations, p=NumericPolicy()):
     """Detect extrema near constraints, batch golden search and bisect both constraints.
 
     Cannot prove no multiple sub-grid extrema. A station with failed samples or
@@ -173,3 +196,84 @@ def refine_windows(evaluate, times, elevations, p=NumericPolicy()):
                 windows.append(dict(site=site,start_s=left[0],end_s=right[0],start_kind=left[1],end_kind=right[1],start_residual_deg=left[2],end_residual_deg=right[2],refinement_status='refined'))
     # Never accept other windows at a station that had any unresolved component.
     return [w for w in windows if w['site'] not in quarantined],anomalies
+
+
+def refine_windows(evaluate, times, elevations, p=NumericPolicy()):
+    """Bounded discovery followed by threshold roots; finite evidence, not completeness.
+
+    Preserve coarse observations. Subdivide every coarse interval to discovery_step_s,
+    then bisect intervals whose midpoint curvature or constraint margin is risky.
+    Arbitrary sub-resolution oscillations can still be missed; never claim a proof.
+    """
+    times=np.asarray(times, float); elevations=np.asarray(elevations, float)
+    if len(times)<2 or np.any(np.diff(times)<=0) or p.discovery_step_s<=0 or p.adaptive_min_step_s<=0:
+        raise ValueError('invalid discovery grid/policy')
+    dense=np.unique(np.concatenate([np.linspace(a,b,max(1,int(np.ceil((b-a)/p.discovery_step_s)))+1)
+                                    for a,b in zip(times[:-1],times[1:])]))
+    rows=[]; anomalies=[]
+    for site,coarse in enumerate(elevations):
+        # Do not erase failures supplied by the caller by evaluating them again.
+        if np.any(~np.isfinite(coarse)):
+            anomalies.append(dict(site=site,reason='nonfinite_discovery_or_sgp4_error'));continue
+        t=dense.copy(); e=np.interp(t,times,coarse)
+        new=~np.isin(t,times)
+        e[new]=evaluate(t[new],np.full(new.sum(),site,dtype=int))
+        active=None
+        for _ in range(p.max_iterations):
+            a=t[:-1];b=t[1:];m=(a+b)/2
+            eligible=(b-a)>p.adaptive_min_step_s
+            if active is not None:
+                bounds=np.asarray(active); idx=np.searchsorted(bounds[:,0],m,side="right")-1
+                eligible &= (idx>=0)&(m<=bounds[np.maximum(idx,0),1])
+            if not np.any(eligible):break
+            m=m[eligible];left=e[:-1][eligible];right=e[1:][eligible]
+            em=evaluate(m,np.full(len(m),site,dtype=int))
+            curvature=np.abs(em-(left+right)/2)
+            vals=np.array([left,em,right]); variation=np.ptp(vals,axis=0)
+            margin=np.minimum(np.min(np.abs(vals-p.min_elevation_deg),axis=0),np.min(np.abs(vals-p.max_elevation_deg),axis=0))
+            risky=(curvature>p.discovery_curvature_deg)|(margin<2*variation)|~np.all(np.isfinite(vals),axis=0)
+            # Retain every evaluated midpoint, even when no further subdivision needed.
+            active=list(zip(a[eligible][risky],b[eligible][risky]))
+            t=np.r_[t,m];e=np.r_[e,em];order=np.argsort(t);t=t[order];e=e[order]
+            if not np.any(risky):break
+            # For efficiency terminate smooth grids; otherwise bounded finer grid.
+            if np.max(np.diff(t))<=p.adaptive_min_step_s:break
+        w,aa=refine_windows_legacy(lambda q,s:evaluate(q,np.full(len(q),site,dtype=int)),t,e[None,:],p)
+        for x in w:x['site']=site;x['discovery_status']='finite_sampled_not_complete'
+        for x in aa:x['site']=site
+        rows.extend(w);anomalies.extend(aa)
+    return rows,anomalies
+
+
+def refine_windows_optimized(evaluator, times, elevations, p=NumericPolicy()):
+    """Two-stage discovery with one batched propagation per satellite.
+
+    Stage 1 evaluates every station on a shared ``discovery_step_s`` grid.
+    Stage 2 delegates extrema/root refinement to the established solver.  The
+    shared grid is essential: satellite propagation depends on time, not site,
+    so evaluating it once avoids the previous ten-fold duplicate propagation.
+
+    This is still a finite discovery strategy.  It detects all crossings that
+    are bracketed by the shared grid or exposed by a sampled local extremum; it
+    does not claim to exclude arbitrary sub-grid oscillations.
+    """
+    times=np.asarray(times,float);elevations=np.asarray(elevations,float)
+    if len(times)<2 or np.any(np.diff(times)<=0) or p.discovery_step_s<=0:
+        raise ValueError('invalid discovery grid/policy')
+    if elevations.ndim!=2:
+        raise ValueError('elevations must be site x time')
+    # Preserve caller-observed failures.  Re-evaluating them on another grid
+    # must never turn a propagation failure into a legal no-window result.
+    failed_sites=np.flatnonzero(np.any(~np.isfinite(elevations),axis=1))
+    dense=np.unique(np.concatenate([
+        np.linspace(a,b,max(1,int(np.ceil((b-a)/p.discovery_step_s)))+1)
+        for a,b in zip(times[:-1],times[1:])]))
+    dense_e=evaluator.grid(dense)
+    rows,anomalies=refine_windows_legacy(evaluator,dense,dense_e,p)
+    for site in failed_sites:
+        if not any(a.get('site')==int(site) for a in anomalies):
+            anomalies.append(dict(site=int(site),reason='nonfinite_coarse_or_sgp4_error'))
+        rows=[w for w in rows if w['site']!=int(site)]
+    for window in rows:
+        window['discovery_status']='shared_15s_grid_finite_sampled_not_complete'
+    return rows,anomalies

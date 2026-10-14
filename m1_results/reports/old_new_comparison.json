@@ -1,0 +1,10 @@
+{
+  "added_windows": 621047,
+  "removed_windows": 2597,
+  "matched_windows": 2877984,
+  "boundary_changed_over_1ms": 462972,
+  "affected_targets": 5060,
+  "max_matched_boundary_delta_s": 18467.06778906338,
+  "p95_matched_boundary_delta_s": 131.82219524681574,
+  "comparison_algorithm": "per-target/per-station sorted sweep; strict positive overlap"
+}

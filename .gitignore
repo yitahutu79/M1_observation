@@ -18,3 +18,22 @@ m1_validation/final/scale_*/windows.csv
 m1_validation/final/scale_*/coarse_windows.csv
 m1_validation/final/scale_*/anomalies.jsonl
 m1_validation/final/standalone_smoke_*
+
+# Formal M1 caches are delivered out-of-band and verified by SHA-256.
+m1_validation/formal_20261001/
+m1_validation/formal_20261001_v2/
+
+# Local regression, profiling, and prototype outputs.
+m1_validation/code_fix_regression/
+m1_validation/performance_optimization/
+m1_validation/night_first_feasibility/
+code_fix_baseline/
+
+# Separately supplied runtime inputs and local run products.
+data/ephemeris/
+data/优先级.zip
+output/
+
+# Atomic-write and resumable-batch artifacts.
+**/.tmp-*
+**/batches/
