@@ -1,44 +1,68 @@
-# M1 官方轨道数据与可见窗口计算（初版）
+# M1 Formal Results (v2)
 
-## 安装与运行
+## Review status
+
+**M1 status: `PASS_FOR_M2_INPUT`.** This package documents the accepted v2 result for a six-day observation-window calculation covering **10,000 targets**, **10 ground stations**, and **2026-10-01 00:00:00 through 2026-10-07 00:00:00 UTC**. M2 must use v2 only. The historical v1 cache has confirmed missed windows and is not an M2 input.
+
+## Accepted result
+
+| Layer / check | Result |
+|---|---:|
+| A: geometric elevation windows | 3,499,031 |
+| B: refined station night windows | 66 |
+| C: optical windows (A intersect B) | 1,655,169 |
+| C windows with duration >= 120 s | 1,034,358 |
+| Independent Skyfield stratified sample | 1,498 / 1,498 passed |
+| Targets with propagation anomalies | 133 (unschedulable) |
+
+A uses the 10°–85° satellite-elevation constraint. B uses solar altitude below -6°. C is the station-matched intersection. The 133 propagation-anomaly targets produced no accepted A windows and must remain unschedulable downstream.
+
+The independent validation is a stratified sample plus a deterministic fixed-grid outside-window check. It is **not a mathematical proof of continuous-time completeness**. The numerical method and remaining limits are recorded in `m1_results/reports/FINAL_ACCEPTANCE.md`.
+
+## Files in this review package
+
+- `m1_results/C_OPTICAL_SAMPLE.csv`: 100 deterministic example rows (the first 10 rows encountered per station). `start_s` and `end_s` are elapsed UTC seconds from 2026-10-01T00:00:00+00:00; `start_utc` and `end_utc` are added for readability.
+- `m1_results/formal_config.public.json`: sanitized, repository-relative formal configuration. Its input and source hashes remain unchanged.
+- `m1_results/manifests/`: exact A/B/C manifests from the accepted cache.
+- `m1_results/reports/`: final acceptance report and compact validation/statistical summaries.
+- `m1_results/M1_V2_SHA256SUMS.txt`: checksums for the complete v2 cache and acceptance evidence.
+- `m1_results/source_snapshot/formal_validate_v2_at_acceptance.py`: exact validation source whose hash is recorded in the v2 configuration.
+
+## Full cache delivery
+
+The complete `m1_validation/formal_20261001_v2/` directory is about 1.4 GiB and is intentionally excluded from ordinary Git history. Git LFS is installed on the originating workstation, but this repository has no LFS tracking policy and no team shared-storage location is currently documented. Therefore this repository does not claim a download URL.
+
+Obtain the complete directory from the result maintainer through the team's approved file-transfer or shared-storage channel, place it at `m1_validation/formal_20261001_v2/`, and verify it from the repository root:
 
 ```bash
-python -m pip install -r requirements.txt
-python m1.py --targets 100 --start 2026-08-03T00:00:00Z --hours 24 --step 60
-python m1.py --targets 1000 --start 2026-08-03T00:00:00Z --hours 24 --step 60 --out output_1000
+shasum -a 256 -c m1_results/M1_V2_SHA256SUMS.txt
 ```
 
-运行路径为项目根目录。`--targets 10000`可处理全量目标，但运行时间和内存需求需实测。
+The check must finish with every entry marked `OK`. Do not combine v1 and v2 layers.
 
-## 文件说明
+## Local review and tests
 
-- `output/audit.json`：TLE格式与站址解析审计。
-- `output/windows.csv`：采样近似可见窗口。
-- `output/run_summary.json`：耗时、窗口数量与错误计数。
-
-## 重要边界
-
-1. `2026-08-03`是贴近TLE历元的**演示时间**，不是企业指定的规划时间。
-2. 站点仰角范围来自官方站址文件，10°≤仰角≤85°。
-3. 窗口边界使用离散采样，存在约一个步长的误差。正式硬约束校验必须对边界加密/求根，并对计划中的观测区间重新独立检验。
-4. 该版本只完成轨道传播与机会分析，不包含观测时长、站点切换、动态事件、调度优化或官方评分。
-5. TLE历元偏离实际规划时间越远，传播不确定性通常越大；不要把演示结果视为真实观测保证。
-
-## M1 精细化与独立校验（第二轮）
-
-本轮入口为 `run_validation.py`，保留原始 `m1.py` 和 `output/`。
+Create a virtual environment, install the pinned dependency ranges, and run the M1 unit tests:
 
 ```bash
-python -m venv .venv
-.venv/bin/python -m pip install -r requirements-validation.txt
-.venv/bin/python -m unittest -v test_visibility
-.venv/bin/python run_validation.py --targets 100 --out m1_validation/my_run/scale_100
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements-validation.txt
+python -m unittest -v test_visibility test_formal_cache test_code_fixes
 ```
 
-- `visibility.py`：60秒粗网格、15秒发现网格、局部极值补搜、10°/85°求根与内部区间分割。
-- `validator.py`：独立数值校验；`validate_csv.py`可单独读取窗口CSV复核。
-- `validation_experiments.py`：独立1秒覆盖检查、短窗口及Brent边界参考。
-- `m1_validation/final/REPORT.md`：三档实测、数值容差、异常、六类图表和M2准入结论。
-- `m1_validation/environment-lock.txt`：本轮实际依赖版本。
+Inspect the sample without loading the full cache:
 
-运行器拒绝已有输出目录，避免覆盖结果。窗口状态 `sampled_valid` 表示有限数值采样通过，`unresolved` 表示待定、不得交给调度当作合法窗口。有限网格无法证明任意短窗口完整；未引入任何单次观测时长、切换时间、目标优先级或调度算法。
+```bash
+python - <<'PY'
+import csv
+from collections import Counter
+with open('m1_results/C_OPTICAL_SAMPLE.csv', encoding='utf-8') as f:
+    rows = list(csv.DictReader(f))
+print('rows:', len(rows))
+print('by station:', Counter(r['station_id'] for r in rows))
+print('first row:', rows[0])
+PY
+```
+
+The full formal recomputation entry point is `formal_recompute_v2.py`. It is resumable and writes only to the v2 cache directory. Running it requires the separately supplied ephemeris and priority inputs whose hashes appear in `formal_config.public.json`; reviewers do not need to run the 10,000-target recomputation to inspect this package.

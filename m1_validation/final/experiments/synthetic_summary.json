@@ -1,7 +1,0 @@
-{
-  "data_kind": "synthetic_analytic_cases",
-  "cases": 6,
-  "all_recovered": true,
-  "coarse_missed": 4,
-  "discovery_grid_missed": 4
-}
