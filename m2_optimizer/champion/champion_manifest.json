@@ -1,0 +1,17 @@
+{
+  "schema_version": "m2-champion-1.0",
+  "source": "m2_milp_lns_results/OVERALL_COMPARISON_BEST.csv",
+  "schedule": "m2_optimizer/champion/CHAMPION_SCHEDULE.csv",
+  "schedule_sha256": "f8e7def013abbb1aa653a4b16a62c98f7c7b2dad79ee2d7e002389ba8de5898d",
+  "config": "m2_optimizer/champion/m2_config.json",
+  "config_sha256": "2729bc0d625470b5c471e430ed3c17dfc0aec730db49405f23257c7ddc18632d",
+  "optimizer": "traditional_local_search",
+  "seed": 20261017,
+  "budget_s": 600.0,
+  "hard_coverage": 9849,
+  "score": 29556.345194860733,
+  "m1_cache": "m1_validation/formal_20261001_v2",
+  "m1_c_sha256": "f05e35c97e4ef37321418efd8c51fd7796f03a316f9dbeb9c80ee0c93332f2df",
+  "m1_status_sha256": "a8379e3d76dbec642984a57ab852df75a8295d5a7f0da32bc77a5a4e3e6c6ae3",
+  "m1_manifest_sha256": "ddad4ed5d9840a1da834baf7064b13c4a892e898b927c1d71849ede9a59e3da6"
+}

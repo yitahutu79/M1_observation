@@ -37,3 +37,40 @@ output/
 # Atomic-write and resumable-batch artifacts.
 **/.tmp-*
 **/batches/
+
+# Python/tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.sqlite
+*.sqlite3
+
+# Offline deliverables and archives (share only through an approved channel)
+artifacts/
+*.tar.gz
+*.zip.sha256
+
+# M2 generated schedules, checkpoints, detailed traces, and solver outputs
+m2_local_search_results/
+m2_math_opt_results/
+m2_max_coverage_score_results/
+m2_neighborhood_diagnosis_results/
+m2_milp_lns_results/
+m2_optimizer_results/
+m2_results_confirmed/
+M2_BEST_SCHEDULE.csv
+MILP_LNS_BEST_SCHEDULE.csv
+M2_OPTIMIZATION_CURVE.csv
+M2_OPERATION_GAIN.csv
+MILP_LNS_CURVE.csv
+MILP_LNS_OPERATIONS.csv
+M2_UNCOVERED_TARGETS.csv
+
+# Frozen schedules contain competition-derived target/window information.
+# Manifests and reports may be reviewed separately.
+m2_optimizer/champion/CHAMPION_SCHEDULE.csv
+m2_optimizer/champion/CHAMPION_VIOLATIONS.csv
+m2_optimizer/current_best/M2_OPTIMIZER_BEST_SCHEDULE.csv
+m2_optimizer/current_best/REFEREE_VIOLATIONS.csv

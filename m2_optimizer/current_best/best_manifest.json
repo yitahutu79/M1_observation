@@ -1,0 +1,16 @@
+{
+  "schema_version": "m2-optimizer-best-1.0",
+  "source": "m2_optimizer_results/comparison_300s_seed20261017/hybrid_300s_seed20261017/candidate_schedule.csv",
+  "schedule": "m2_optimizer/current_best/M2_OPTIMIZER_BEST_SCHEDULE.csv",
+  "schedule_sha256": "a8889d09735327ecb0a224973da3ffe831a6a9796eeb2a87f15bf4eceb3e8311",
+  "mode": "hybrid",
+  "seed": 20261017,
+  "budget_s": 300.0,
+  "score": 29579.884245958976,
+  "gain_over_frozen_champion": 23.5390510981415,
+  "coverage": 9849,
+  "task_count": 11225,
+  "repeat_count": 1376,
+  "referee_violations": 0,
+  "frozen_champion_sha256": "f8e7def013abbb1aa653a4b16a62c98f7c7b2dad79ee2d7e002389ba8de5898d"
+}

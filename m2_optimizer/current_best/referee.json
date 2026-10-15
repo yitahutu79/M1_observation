@@ -1,0 +1,100 @@
+{
+  "legal": true,
+  "violation_count": 0,
+  "violation_categories": {},
+  "task_count": 11225,
+  "unique_covered_targets": 9849,
+  "target_limit": 10000,
+  "coverage_rate": 0.9849,
+  "total_score": 29579.884245958976,
+  "repeated_observation_count": 1376,
+  "observations_per_target_distribution": {
+    "1": 8534,
+    "2": 1254,
+    "3": 61
+  },
+  "minimum_revisit_gap_s": 172800.0,
+  "priority_metrics": {
+    "high": {
+      "target_count": 2024,
+      "covered_targets": 1990,
+      "coverage_rate": 0.983201581027668,
+      "observation_count": 3366,
+      "score": 14872.798434196133
+    },
+    "medium": {
+      "target_count": 3990,
+      "covered_targets": 3935,
+      "coverage_rate": 0.9862155388471178,
+      "observation_count": 3935,
+      "score": 8883.216222910733
+    },
+    "low": {
+      "target_count": 3986,
+      "covered_targets": 3924,
+      "coverage_rate": 0.9844455594581034,
+      "observation_count": 3924,
+      "score": 5823.869588852111
+    }
+  },
+  "scheduled_seconds": 1980769.9666706775,
+  "overall_station_utilization": 0.3820929719657943,
+  "station_metrics": {
+    "1": {
+      "task_count": 1136,
+      "scheduled_seconds": 203595.2326844201,
+      "planning_horizon_utilization": 0.39273771736963753
+    },
+    "2": {
+      "task_count": 1090,
+      "scheduled_seconds": 197302.40425648665,
+      "planning_horizon_utilization": 0.38059877364291406
+    },
+    "3": {
+      "task_count": 1093,
+      "scheduled_seconds": 192359.95522686007,
+      "planning_horizon_utilization": 0.3710647284468751
+    },
+    "4": {
+      "task_count": 1133,
+      "scheduled_seconds": 201857.95931698766,
+      "planning_horizon_utilization": 0.389386495596041
+    },
+    "5": {
+      "task_count": 1155,
+      "scheduled_seconds": 203707.84151491866,
+      "planning_horizon_utilization": 0.39295494119390173
+    },
+    "6": {
+      "task_count": 1165,
+      "scheduled_seconds": 203391.0366582576,
+      "planning_horizon_utilization": 0.39234382071423146
+    },
+    "7": {
+      "task_count": 1133,
+      "scheduled_seconds": 199013.44971897,
+      "planning_horizon_utilization": 0.3838994014640625
+    },
+    "8": {
+      "task_count": 1005,
+      "scheduled_seconds": 172770.63452159957,
+      "planning_horizon_utilization": 0.33327668696296214
+    },
+    "9": {
+      "task_count": 1158,
+      "scheduled_seconds": 203527.38624091318,
+      "planning_horizon_utilization": 0.3926068407425023
+    },
+    "10": {
+      "task_count": 1157,
+      "scheduled_seconds": 203244.06653126402,
+      "planning_horizon_utilization": 0.39206031352481485
+    }
+  },
+  "formal_status_counts": {
+    "has_windows": 9867,
+    "full_sampled_propagation_failure": 107,
+    "partial_sampled_propagation_failure": 26
+  },
+  "validation_scope": "every scheduled task checked against its cited formal C row; M1 continuous-time completeness not re-proved"
+}
