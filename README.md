@@ -30,6 +30,7 @@ M1 validation combines stratified sampling and a deterministic fixed-grid outsid
 | `m2_math_opt_feasibility.py`, `m2_neighborhood_diagnosis.py`, `m2_milp_lns.py` | auxiliary MILP and MILP-LNS experiments |
 | `m2_optimizer_interface.py`, `run_m2_optimizer.py` | unified `fast_local`, `milp_rebuild`, and `hybrid` interface |
 | `m2_results/M2_CURRENT_CHAMPION.json` | current champion identity, metrics, Referee evidence, and protected input hashes |
+| `m2_results/full/` | local full schedules; the current champion is `TEAM_RECOVERY_BEST_SCHEDULE.csv` (ignored by Git) |
 | `docs/README.md` | document index for rules, M1, M2, team, FAMOU, and repository records |
 | `docs/rules/CONTEST_RULES.md` | confirmed rules and unresolved official normalization |
 | `docs/famou/FAMOU_TASK.md` | autonomous optimization assignment and evidence requirements |
@@ -59,6 +60,11 @@ shasum -a 256 -c m1_results/M1_V2_SHA256SUMS.txt
 The ordinary Git history excludes the full M1 cache, detailed optimizer runs, complete current schedule, cross-team source packages, local virtual environments, and FAMOU delivery archives. Original TLE, station, priority, and ephemeris files may only be redistributed through an authorized channel.
 
 M2 must read `formal_20261001_v2`; the rejected v1 cache is not an accepted input.
+
+The root directory intentionally contains only the stable executable modules, current command-line
+entry points, and their tests. Historical scripts are under `local_archive/legacy_scripts/`; historical
+root-level tables are under `local_archive/legacy_results/root_outputs/`. Those archives are retained
+for traceability and are not current inputs.
 
 ## Default optimization command
 

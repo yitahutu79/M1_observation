@@ -25,6 +25,7 @@ docs/famou/PACKAGE_VALIDATION_REPORT.md
 docs/repository/GITHUB_COMMIT_CANDIDATES.txt
 docs/repository/GITHUB_PENDING_MANIFEST.csv
 docs/repository/GITHUB_UPLOAD_AUDIT.md
+docs/repository/FILE_LIFECYCLE.md
 docs/repository/PROJECT_INVENTORY.csv
 m2_results/M2_CURRENT_CHAMPION.json
 m2_results/M2_CURRENT_CHAMPION_SAMPLE.csv

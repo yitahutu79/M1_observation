@@ -23,7 +23,7 @@ ROOT=Path(__file__).resolve().parent
 CACHE=ROOT/"m1_validation/formal_20261001_v2"
 CONFIG=ROOT/"m2_config.json"
 PRIORITY=ROOT/"data/优先级.zip"
-BASE=ROOT/"M2_BEST_SCHEDULE.csv"
+BASE=ROOT/"m2_results/full/M2_BEST_SCHEDULE.csv"
 OUT=ROOT/"m2_milp_lns_results"
 DB=Path("/tmp/m2_milp_lns_windows.sqlite")
 HARD_COVERAGE=9849
@@ -218,9 +218,11 @@ def main():
                 atomic_json(OUT/"experiment_checkpoint.json",{"base_sha256":base_hash,"completed_runs":runs,"best":best})
     comparison_best=best
     milp_best=max((row for row in runs if row["method"]=="milp_lns"),key=lambda row:row["score"])
-    shutil.copy2(milp_best["schedule"],ROOT/"MILP_LNS_BEST_SCHEDULE.csv")
+    best_schedule=ROOT/"m2_results/full/MILP_LNS_BEST_SCHEDULE.csv"
+    best_schedule.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(milp_best["schedule"],best_schedule)
     shutil.copy2(comparison_best["schedule"],OUT/"OVERALL_COMPARISON_BEST.csv")
-    csv_write(ROOT/"MILP_LNS_CURVE.csv",curve);csv_write(ROOT/"MILP_LNS_OPERATIONS.csv",operations)
+    csv_write(ROOT/"m2_results/full/MILP_LNS_CURVE.csv",curve);csv_write(ROOT/"m2_results/full/MILP_LNS_OPERATIONS.csv",operations)
     summaries=[]
     for group_budget in group_budgets:
         for method in ("milp_lns","traditional_local_search"):
@@ -231,14 +233,14 @@ def main():
                 "score_stddev":statistics.pstdev(values),"mean_gain":statistics.mean(r["gain"] for r in sample),
                 "total_accepted_improvements":sum(r["accepted_improvements"] for r in sample),
                 "mean_elapsed_s":statistics.mean(r["elapsed_s"] for r in sample),"all_zero_violations":all(r["violations"]==0 for r in sample)})
-    final_check=referee(ROOT/"MILP_LNS_BEST_SCHEDULE.csv",CACHE,PRIORITY,CONFIG,10000,OUT/"BEST_FINAL_VIOLATIONS.csv")
+    final_check=referee(best_schedule,CACHE,PRIORITY,CONFIG,10000,OUT/"BEST_FINAL_VIOLATIONS.csv")
     comparison_check=referee(OUT/"OVERALL_COMPARISON_BEST.csv",CACHE,PRIORITY,CONFIG,10000,
                              OUT/"OVERALL_COMPARISON_BEST_VIOLATIONS.csv")
     result={"base_sha256":base_hash,"base_score":base_score,"hard_coverage":HARD_COVERAGE,
         "budget_definition":"each method and each fixed seed receives the full stated end-to-end budget",
         "seeds":SEEDS,"local_milp_cap_s":LOCAL_SOLVE_CAP_S,"runs":runs,"summaries":summaries,
         "best":milp_best,"comparison_best":comparison_best,
-        "best_schedule_sha256":sha256(ROOT/"MILP_LNS_BEST_SCHEDULE.csv"),
+        "best_schedule_sha256":sha256(best_schedule),
         "comparison_best_schedule_sha256":sha256(OUT/"OVERALL_COMPARISON_BEST.csv"),
         "final_referee":final_check,"comparison_best_referee":comparison_check}
     atomic_json(OUT/"results.json",result);index.close();print(json.dumps({"summaries":summaries,"best":milp_best,"comparison_best":comparison_best,"final":final_check},indent=2))

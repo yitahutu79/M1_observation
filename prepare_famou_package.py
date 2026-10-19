@@ -100,14 +100,14 @@ def main() -> None:
             copy(path.relative_to(ROOT).as_posix())
 
     # The current champion is intentionally present only in this authorized offline bundle.
-    copy("TEAM_RECOVERY_BEST_SCHEDULE.csv", "results/current_champion/TEAM_RECOVERY_BEST_SCHEDULE.csv")
+    copy("m2_results/full/TEAM_RECOVERY_BEST_SCHEDULE.csv", "results/current_champion/TEAM_RECOVERY_BEST_SCHEDULE.csv")
     copy("team_recovery_results/FINAL_REFEREE_SUMMARY.json",
          "results/current_champion/FINAL_REFEREE_SUMMARY.json")
     copy("team_recovery_results/FINAL_REFEREE_VIOLATIONS.csv",
          "results/current_champion/FINAL_REFEREE_VIOLATIONS.csv")
     copy("team_recovery_results/DELIVERABLE_SHA256.txt",
          "results/current_champion/RECOVERY_DELIVERABLE_SHA256.txt")
-    schedule_sample(ROOT / "TEAM_RECOVERY_BEST_SCHEDULE.csv",
+    schedule_sample(ROOT / "m2_results/full/TEAM_RECOVERY_BEST_SCHEDULE.csv",
                     OUT / "samples/M2_CURRENT_CHAMPION_SAMPLE.csv")
     copy("m1_results/C_OPTICAL_SAMPLE.csv", "samples/C_OPTICAL_SAMPLE.csv")
 

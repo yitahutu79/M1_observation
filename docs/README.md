@@ -42,6 +42,14 @@ competition-derived schedule is distributed only through an authorized channel.
 
 The generated FAMOU bundle remains under the ignored `artifacts/` directory and is delivered manually.
 
+## Code and result lifecycle
+
+The repository root keeps the stable M1/M2 modules, current command-line entry points, and tests because
+their imports and documented commands depend on that location. Historical scripts are preserved under
+`../local_archive/legacy_scripts/`, grouped by M1 and M2. Historical root-level CSV/JSON tables are under
+`../local_archive/legacy_results/root_outputs/`. The current full champion is local-only at
+`../m2_results/full/TEAM_RECOVERY_BEST_SCHEDULE.csv`; its identity and hash remain in the tracked champion manifest.
+
 ## Repository records
 
 - `repository/GITHUB_UPLOAD_AUDIT.md`: redistribution, privacy, and exclusion audit.

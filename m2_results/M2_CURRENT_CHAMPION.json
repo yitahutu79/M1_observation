@@ -2,7 +2,7 @@
   "schema_version": "m2-current-champion-20261019-v1",
   "status": "ACCEPTED_ZERO_VIOLATIONS",
   "schedule_distribution": "out_of_band_authorized_channel",
-  "local_source": "TEAM_RECOVERY_BEST_SCHEDULE.csv",
+  "local_source": "m2_results/full/TEAM_RECOVERY_BEST_SCHEDULE.csv",
   "schedule_sha256": "9804bf0dbd2bf99d981420fb041b92cf6617391ec826d65a09f700317807723d",
   "coverage": 9849,
   "raw_total_score": 32311.5853472602,

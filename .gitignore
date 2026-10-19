@@ -60,6 +60,7 @@ m2_neighborhood_diagnosis_results/
 m2_milp_lns_results/
 m2_optimizer_results/
 m2_results_confirmed/
+m2_results/full/
 M2_BEST_SCHEDULE.csv
 MILP_LNS_BEST_SCHEDULE.csv
 M2_OPTIMIZATION_CURVE.csv

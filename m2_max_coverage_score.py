@@ -336,12 +336,14 @@ def main():
         best_run="coverage_strict_unimproved"
     else:
         best_path,bestrow=best;best_validation=bestrow["final"];best_run=bestrow["run"]
-    shutil.copy2(best_path,ROOT/"M2_BEST_SCHEDULE.csv")
-    if sha256(best_path)!=sha256(ROOT/"M2_BEST_SCHEDULE.csv"):raise RuntimeError("best schedule copy failed")
+    current_path=ROOT/"m2_results/full/M2_BEST_SCHEDULE.csv"
+    current_path.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(best_path,current_path)
+    if sha256(best_path)!=sha256(current_path):raise RuntimeError("best schedule copy failed")
     csv_write(ROOT/"M2_OPTIMIZATION_CURVE.csv",curve)
     csv_write(ROOT/"M2_OPERATION_GAIN.csv",gains)
     result={"initial":manifest,"budgets_are_total_across_three_seeds":True,"runs":runs,
-        "best_run":best_run,"best_schedule_sha256":sha256(ROOT/"M2_BEST_SCHEDULE.csv"),
+        "best_run":best_run,"best_schedule_sha256":sha256(current_path),
         "best":best_validation,"baseline_score":BASELINE_SCORE,"score_gain":best_validation["total_score"]-BASELINE_SCORE}
     (OUT/"results.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
     index.close();print(json.dumps({"best_run":best_run,"best":best_validation,"gain":result["score_gain"]},indent=2))
