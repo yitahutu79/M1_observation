@@ -4,13 +4,13 @@
 
 - Target branch: `main`
 - Remote: `https://github.com/yitahutu79/M1_observation.git`
-- Local and remote-tracking `main` initially pointed to `9445f40`.
+- Local and remote-tracking `main` were aligned at `cf20cf653a4f87353954ae3c5999b1c628679d21` before this organization update.
 - The user identifies this as the private team repository. The HTTPS remote URL alone does not expose repository visibility.
 - This update contains documentation, manifests, compact samples, and package tooling; it does not modify M1/M2 algorithms.
 
 ## Files intended for the collaboration update
 
-The exact allowlist is `GITHUB_COMMIT_CANDIDATES.txt`. It contains:
+The exact allowlist is `docs/repository/GITHUB_COMMIT_CANDIDATES.txt`. It contains:
 
 - updated README, runbook, ignore rules, and FAMOU task definition;
 - current champion identity and a 100-row schema sample;
@@ -26,7 +26,7 @@ The exact allowlist is `GITHUB_COMMIT_CANDIDATES.txt`. It contains:
 - `.venv/`, `__pycache__/`, `.DS_Store`, temporary files, and local FAMOU archives;
 - original priority archive and DE421 ephemeris.
 
-The complete champion is present only in the ignored offline FAMOU bundle and authorized local result directory. Git contains `M2_CURRENT_CHAMPION.json` and a small review sample.
+The complete champion is present only in the ignored offline FAMOU bundle and authorized local result directory. Git contains `m2_results/M2_CURRENT_CHAMPION.json` and a small review sample.
 
 ## Data and privacy
 
@@ -41,16 +41,16 @@ The complete champion is present only in the ignored offline FAMOU bundle and au
 - M1 v2 B: `52393742eea973397723108a5b46dfd4f67af9f4bc27252e4edcc986b424c13b`
 - M1 v2 C: `f05e35c97e4ef37321418efd8c51fd7796f03a316f9dbeb9c80ee0c93332f2df`
 - M2 champion: `9804bf0dbd2bf99d981420fb041b92cf6617391ec826d65a09f700317807723d`
-- FAMOU archive: `ecd1cab45efaa0392ad7ab0a7ccfc1df3649485f35682a88eb8e05d28dc49c06`
+- FAMOU archive: `f8ce9a40baf0921af4100f3c96675167a31ac9e947ba845557b3c9be201d105f`
 
 ## Validation
 
 - Root unit suite: 42 tests passed.
 - Offline FAMOU package: 75 manifest files, all checksums pass.
 - Package-only data-independent tests: 32 passed.
-- FAMOU package restricted-path/secret scan: pass.
+- FAMOU package document layout, restricted-path, and secret scan: pass.
 - Commit-allowlist credential/personal-path scan: pass.
 
 ## Commit policy
 
-Stage only paths in `GITHUB_COMMIT_CANDIDATES.txt`, inspect the staged diff, commit directly to `main` as requested by the repository owner, and push without force. Two `git fetch` attempts were reset by the network on 2026-10-19; a normal non-force push will safely reject if the remote has advanced. The FAMOU archive itself remains outside Git and is delivered manually to the platform.
+Stage only paths in `docs/repository/GITHUB_COMMIT_CANDIDATES.txt`, inspect the staged diff, commit directly to `main` as requested by the repository owner, and push without force. Two `git fetch` attempts were reset by the network on 2026-10-19; a normal non-force push will safely reject if the remote has advanced. The FAMOU archive itself remains outside Git and is delivered manually to the platform.

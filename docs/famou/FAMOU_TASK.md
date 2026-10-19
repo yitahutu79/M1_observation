@@ -15,7 +15,7 @@ This task is platform-neutral. The repository and package do not invent or assum
 - Referee: PASS, 0 violations
 - Champion SHA-256: `9804bf0dbd2bf99d981420fb041b92cf6617391ec826d65a09f700317807723d`
 - Formal M1 v2 C SHA-256: `f05e35c97e4ef37321418efd8c51fd7796f03a316f9dbeb9c80ee0c93332f2df`
-- Confirmed rules: `CONTEST_RULES.md` and frozen `m2_config.json`
+- Confirmed rules: `docs/rules/CONTEST_RULES.md` and frozen `m2_config.json`
 
 Do not modify M1, the baseline schedule, rules, numerical tolerances, or Referee. Work in new files/directories and verify all supplied hashes before execution.
 

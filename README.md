@@ -29,12 +29,13 @@ M1 validation combines stratified sampling and a deterministic fixed-grid outsid
 | `m2_local_search.py`, `m2_max_coverage_score.py` | Fast Local optimization |
 | `m2_math_opt_feasibility.py`, `m2_neighborhood_diagnosis.py`, `m2_milp_lns.py` | auxiliary MILP and MILP-LNS experiments |
 | `m2_optimizer_interface.py`, `run_m2_optimizer.py` | unified `fast_local`, `milp_rebuild`, and `hybrid` interface |
-| `M2_CURRENT_CHAMPION.json` | current champion identity, metrics, Referee evidence, and protected input hashes |
-| `CONTEST_RULES.md` | confirmed rules and unresolved official normalization |
-| `FAMOU_TASK.md` | autonomous optimization assignment and evidence requirements |
+| `m2_results/M2_CURRENT_CHAMPION.json` | current champion identity, metrics, Referee evidence, and protected input hashes |
+| `docs/README.md` | document index for rules, M1, M2, team, FAMOU, and repository records |
+| `docs/rules/CONTEST_RULES.md` | confirmed rules and unresolved official normalization |
+| `docs/famou/FAMOU_TASK.md` | autonomous optimization assignment and evidence requirements |
 | `RUNBOOK.md` | environment, checks, and reproducible commands |
 
-MILP is an implemented and experimentally evaluated auxiliary local mathematical optimization method. It does not provide a global optimality guarantee for the complete continuous-time scheduling problem. See `M2_MATH_MODULE_AUDIT.md`.
+MILP is an implemented and experimentally evaluated auxiliary local mathematical optimization method. It does not provide a global optimality guarantee for the complete continuous-time scheduling problem. See `docs/m2/M2_MATH_MODULE_AUDIT.md`.
 
 ## Setup and fast tests
 

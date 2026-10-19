@@ -89,3 +89,6 @@ DELETE_MANIFEST.csv
 artifacts/FAMOU_*/
 artifacts/FAMOU_*.tar.gz
 artifacts/FAMOU_*.tar.gz.sha256
+
+# Superseded local reports retained for reference, not collaboration entry points.
+local_archive/

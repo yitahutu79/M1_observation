@@ -24,14 +24,14 @@ TESTS = [
     "test_m2_math_opt.py", "test_m2_optimizer_interface.py",
 ]
 DOCS = [
-    "README.md", "RUNBOOK.md", "CONTEST_RULES.md", "FAMOU_TASK.md",
-    "M1_FORMAL_DATA_MANIFEST.md", "M1_RESULTS_README.md", "M2_RULES_CONFIRMED.md",
-    "M2_REVISED_BASELINES.md", "M2_BOTTLENECK_ANALYSIS.md", "M2_MATH_OPT_FEASIBILITY.md",
-    "M2_NEIGHBORHOOD_DIAGNOSIS.md", "MILP_LNS_RESULTS.md", "M2_OPTIMIZER_INTERFACE.md",
-    "M2_OPTIMIZER_COMPARISON.md", "M2_MATH_MODULE_AUDIT.md",
-    "TEAM_SIX_TARGET_RECOVERY.md",
+    "README.md", "RUNBOOK.md", "docs/rules/CONTEST_RULES.md", "docs/famou/FAMOU_TASK.md",
+    "docs/m1/M1_FORMAL_DATA_MANIFEST.md", "docs/m1/M1_RESULTS_README.md", "docs/m2/M2_RULES_CONFIRMED.md",
+    "docs/m2/M2_REVISED_BASELINES.md", "docs/m2/M2_BOTTLENECK_ANALYSIS.md", "docs/m2/M2_MATH_OPT_FEASIBILITY.md",
+    "docs/m2/M2_NEIGHBORHOOD_DIAGNOSIS.md", "docs/m2/MILP_LNS_RESULTS.md", "docs/m2/M2_OPTIMIZER_INTERFACE.md",
+    "docs/m2/M2_OPTIMIZER_COMPARISON.md", "docs/m2/M2_MATH_MODULE_AUDIT.md",
+    "docs/team/TEAM_SIX_TARGET_RECOVERY.md",
 ]
-CONFIG = ["requirements.txt", "requirements-validation.txt", "m2_config.json", "M2_CURRENT_CHAMPION.json"]
+CONFIG = ["requirements.txt", "requirements-validation.txt", "m2_config.json"]
 
 
 def sha256(path: Path) -> str:
@@ -88,9 +88,11 @@ def main() -> None:
     for relative in TESTS:
         copy(relative, f"tests/{relative}")
     for relative in DOCS:
-        copy(relative, f"docs/{relative}")
+        target = relative if relative.startswith("docs/") else f"docs/{relative}"
+        copy(relative, target)
     for relative in CONFIG:
         copy(relative, relative)
+    copy("m2_results/M2_CURRENT_CHAMPION.json", "M2_CURRENT_CHAMPION.json")
     copy("prepare_famou_package.py", "tools/prepare_famou_package.py")
 
     for path in (ROOT / "m1_results").rglob("*"):
@@ -124,7 +126,7 @@ This authorized offline bundle contains the accepted M1/M2 code, independent Ref
 unit tests, compact M1 evidence, the current 9,849-coverage champion, and fixed-budget comparison logs.
 The champion has raw score 32,311.5853472602 and passed the independent Referee with zero violations.
 
-Start with `docs/FAMOU_TASK.md`, `docs/CONTEST_RULES.md`, `M2_CURRENT_CHAMPION.json`, and
+Start with `docs/famou/FAMOU_TASK.md`, `docs/rules/CONTEST_RULES.md`, `M2_CURRENT_CHAMPION.json`, and
 `docs/RUNBOOK.md`. Verify every file with `SHA256SUMS.txt` before execution.
 
 The full formal M1 v2 cache and original TLE/station/priority/ephemeris inputs are excluded. Restore them

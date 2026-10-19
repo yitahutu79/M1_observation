@@ -2,18 +2,18 @@
 
 - Package: `artifacts/FAMOU_M2_AUTONOMOUS_20261019/`
 - Archive: `artifacts/FAMOU_M2_AUTONOMOUS_20261019.tar.gz`
-- Archive SHA-256: `ecd1cab45efaa0392ad7ab0a7ccfc1df3649485f35682a88eb8e05d28dc49c06`
+- Archive SHA-256: `f8ce9a40baf0921af4100f3c96675167a31ac9e947ba845557b3c9be201d105f`
 - Files listed below: 75
-- Package size: 3,163,569 bytes
+- Package size: 3,163,997 bytes
 
 完整冠军和样例属于比赛派生数据，只能上传到已授权的FAMOU/团队空间。原始TLE、站点、优先级、星历和完整M1缓存不在包内。
 
 | 级别 | 包内路径 | 大小 | 用途 | 数据关系 | SHA-256 |
 |---|---|---:|---|---|---|
-| 必须提供 | `AI_OUTPUT_CHECKLIST.md` | 671 | 材料包说明或工具 | 不含原始比赛数据 | `1fa16316ee3465056268ffc643fbdb3bfd3c1f392b754f0bdc4bb43214d2d04f` |
+| 必须提供 | `AI_OUTPUT_CHECKLIST.md` | 671 | 材料包说明、配置或工具 | 不含原始比赛数据 | `1fa16316ee3465056268ffc643fbdb3bfd3c1f392b754f0bdc4bb43214d2d04f` |
 | 必须提供 | `M2_CURRENT_CHAMPION.json` | 1,506 | 配置、身份或校验信息 | 不含原始比赛数据 | `719c3675d42a8a379522a1c8cacf7863afb68cb211eeb2d912aeca4c9b33d8f6` |
-| 必须提供 | `PACKAGE_README.md` | 830 | 材料包说明或工具 | 不含原始比赛数据 | `ca9e991de7282cde6866daad91fafc37f02a5aa6b53477a8684d483bb7c709ad` |
-| 必须提供 | `PACKAGE_TESTS.md` | 379 | 材料包说明或工具 | 不含原始比赛数据 | `39919b9f630589fd9f5d11b6c77b2767157b458b1d9804894fdf2985e4858bb3` |
+| 必须提供 | `PACKAGE_README.md` | 842 | 材料包说明、配置或工具 | 不含原始比赛数据 | `582311228d1228e8ef58dce9c71aabc05daf59c55549c4aaa6f36e266f5f1480` |
+| 必须提供 | `PACKAGE_TESTS.md` | 379 | 材料包说明、配置或工具 | 不含原始比赛数据 | `39919b9f630589fd9f5d11b6c77b2767157b458b1d9804894fdf2985e4858bb3` |
 | 必须提供 | `code/m2_local_search.py` | 11,704 | 可执行源码 | 不含原始比赛数据 | `836563e85665c9edd88097d4250c6900676f5220b7f5cb8d447e70105aa30c2d` |
 | 必须提供 | `code/m2_math_opt_feasibility.py` | 15,909 | 可执行源码 | 不含原始比赛数据 | `eae8dd30d25ec9b69cdf7900382210f43559e3b156d9fa28d6af598ba09f8e93` |
 | 必须提供 | `code/m2_max_coverage_score.py` | 18,822 | 可执行源码 | 不含原始比赛数据 | `e9360a2755f545db31bcd83738560460582c114a235f4411e7a721e08745f389` |
@@ -22,14 +22,14 @@
 | 必须提供 | `code/m2_optimizer_interface.py` | 16,564 | 可执行源码 | 不含原始比赛数据 | `72c9fbb3b02fab03e420c91accfa63d58ddb440e0155752d545ad77993421921` |
 | 必须提供 | `code/m2_referee.py` | 15,447 | 可执行源码 | 不含原始比赛数据 | `c745b34e6847078c186ac850e292c69605920cc9bffd51acdf1ae0991a82eaf0` |
 | 必须提供 | `code/m2_scheduler.py` | 15,115 | 可执行源码 | 不含原始比赛数据 | `43df0e456beb750434eee91489c79e72d9e86a3669c64988cd7897de575dd52b` |
-| 必须提供 | `docs/CONTEST_RULES.md` | 2,665 | 规则、审计或复现文档 | 不含原始比赛数据 | `193fe9e255d6101e6e3c811d5c1f85d7ff0361485cb2e47b25c775cc960a73d6` |
-| 必须提供 | `docs/FAMOU_TASK.md` | 4,806 | 规则、审计或复现文档 | 不含原始比赛数据 | `ff4e20b17249d665f5e6becb7eb21b6076795fcc499489a3181800b74bee4b09` |
+| 必须提供 | `docs/famou/FAMOU_TASK.md` | 4,817 | 规则、审计或复现文档 | 不含原始比赛数据 | `6f09f49d26dab5f45b513996546fab4bcfb42beb846628165860dfebecf91d48` |
+| 必须提供 | `docs/rules/CONTEST_RULES.md` | 2,665 | 规则、审计或复现文档 | 不含原始比赛数据 | `193fe9e255d6101e6e3c811d5c1f85d7ff0361485cb2e47b25c775cc960a73d6` |
 | 必须提供 | `m2_config.json` | 802 | 配置、身份或校验信息 | 不含原始比赛数据 | `2729bc0d625470b5c471e430ed3c17dfc0aec730db49405f23257c7ddc18632d` |
-| 必须提供 | `requirements-validation.txt` | 39 | 配置、身份或校验信息 | 不含原始比赛数据 | `72e714d4c3a90f884c7447e83682325947842ac8b186c1047b237130cf03b27a` |
-| 必须提供 | `requirements.txt` | 62 | 配置、身份或校验信息 | 不含原始比赛数据 | `5e93870c1d07a3f0ce44b384a8e2631770e10157e22872747a66bbbb7cb5e6d5` |
+| 必须提供 | `requirements-validation.txt` | 39 | 材料包说明、配置或工具 | 不含原始比赛数据 | `72e714d4c3a90f884c7447e83682325947842ac8b186c1047b237130cf03b27a` |
+| 必须提供 | `requirements.txt` | 62 | 材料包说明、配置或工具 | 不含原始比赛数据 | `5e93870c1d07a3f0ce44b384a8e2631770e10157e22872747a66bbbb7cb5e6d5` |
 | 必须提供 | `results/current_champion/FINAL_REFEREE_SUMMARY.json` | 2,879 | 当前冠军与独立验收证据 | 比赛派生数据 | `35cd61f5cf628e3ba5f1483e0fd16d9554e602fa7160b6f968ce6b0929202fa3` |
 | 必须提供 | `results/current_champion/FINAL_REFEREE_VIOLATIONS.csv` | 59 | 当前冠军与独立验收证据 | 比赛派生数据 | `b38dcafedd5585fc21e64690aa4c2855bea443a11a6cb4baa687b0ec046411ae` |
-| 必须提供 | `results/current_champion/RECOVERY_DELIVERABLE_SHA256.txt` | 605 | 当前冠军与独立验收证据 | 比赛派生数据 | `d83c871726dcd45a6114d72abf8e6d3555c248ffbe9bd3b0b33cf5e4ebae75e9` |
+| 必须提供 | `results/current_champion/RECOVERY_DELIVERABLE_SHA256.txt` | 615 | 当前冠军与独立验收证据 | 比赛派生数据 | `5d0eda2696eb4a4ac62effa9bfe276953d518a2a72a960446f8cb294aec9e233` |
 | 必须提供 | `results/current_champion/TEAM_RECOVERY_BEST_SCHEDULE.csv` | 2,731,083 | 当前冠军与独立验收证据 | 比赛派生数据 | `9804bf0dbd2bf99d981420fb041b92cf6617391ec826d65a09f700317807723d` |
 | 建议提供 | `code/formal_cache.py` | 10,453 | 可执行源码 | 不含原始比赛数据 | `f8b0fe2050c2f64a48494c68315ac64ddbdac9f1742f6c69c6cf30c87f6a7dcf` |
 | 建议提供 | `code/formal_recompute_v2.py` | 19,271 | 可执行源码 | 不含原始比赛数据 | `0135f1c6ac75181ca4f6f485a033878ee75835f8d6ee3b23cb948dada52bd246` |
@@ -64,27 +64,27 @@
 | 建议提供 | `tests/test_m2_math_opt.py` | 1,461 | 快速或回归测试 | 不含原始比赛数据 | `0ec99ca3bf87ce3cba13b04e799ceaefb0f7bb2297657a3023d8951aaba08cbe` |
 | 建议提供 | `tests/test_m2_optimizer_interface.py` | 1,061 | 快速或回归测试 | 不含原始比赛数据 | `96debacab1e7e32a2ea1d14c1c95ef57cff759a85c3e342f2aecaeb7951cf630` |
 | 建议提供 | `tests/test_visibility.py` | 5,335 | 快速或回归测试 | 不含原始比赛数据 | `9daaa05c666b9e383c4518d10f8af36b7e03f0f0c0f69ae447ce2ccf09cb01cc` |
-| 可选提供 | `EXTERNAL_DATA_REQUIRED.md` | 311 | 材料包说明或工具 | 不含原始比赛数据 | `0aa8bf891a503fafab193c94d661e3f9247d33c491d84d213daf7591d37dc637` |
+| 可选提供 | `EXTERNAL_DATA_REQUIRED.md` | 311 | 材料包说明、配置或工具 | 不含原始比赛数据 | `0aa8bf891a503fafab193c94d661e3f9247d33c491d84d213daf7591d37dc637` |
 | 可选提供 | `code/m1.py` | 4,493 | 可执行源码 | 不含原始比赛数据 | `6babc929c31a7eac3ccac562d0176b378148ced1d3ea1025e6123f4ccad265ca` |
 | 可选提供 | `code/optical_validation.py` | 2,230 | 可执行源码 | 不含原始比赛数据 | `2e2b67566eccdcdc2b4034f0bf0d5a6974d1933f44edce64b6cde3856a3d019d` |
 | 可选提供 | `code/run_m2_optimizer.py` | 1,143 | 可执行源码 | 不含原始比赛数据 | `7988a48b6cb0025fcd87d1b6a57a423e3344a5dd5a6c47569b29ba0024bb08e6` |
 | 可选提供 | `code/run_m2_optimizer_comparison.py` | 2,475 | 可执行源码 | 不含原始比赛数据 | `14af17fb48b4d23606ea75efa2bf56a6247313cdf4c1e53774819187eba180d7` |
 | 可选提供 | `code/validator.py` | 6,958 | 可执行源码 | 不含原始比赛数据 | `1c66aa1573b55805da7356f93b0d2adbd2e86dbf7b7d9f3cfaf3a930791acfe4` |
-| 可选提供 | `docs/M1_FORMAL_DATA_MANIFEST.md` | 2,529 | 规则、审计或复现文档 | 不含原始比赛数据 | `9e5475f24ba93b97191be5d11f7ad624839f11910572ccc09053759eb207366e` |
-| 可选提供 | `docs/M1_RESULTS_README.md` | 3,829 | 规则、审计或复现文档 | 不含原始比赛数据 | `8f1e6eb6a426747530b756eb7a0a694441722eff972b26a2553a1883bbef615a` |
-| 可选提供 | `docs/M2_BOTTLENECK_ANALYSIS.md` | 4,440 | 规则、审计或复现文档 | 不含原始比赛数据 | `38a0caff2a5564d7611dc92b7831e5780db329890a528a725732361022de4e7b` |
-| 可选提供 | `docs/M2_MATH_MODULE_AUDIT.md` | 12,402 | 规则、审计或复现文档 | 不含原始比赛数据 | `03512495245e69eaad1ef148e68f4e3d4e3b1d847aebd07d01175190c8db6cab` |
-| 可选提供 | `docs/M2_MATH_OPT_FEASIBILITY.md` | 5,815 | 规则、审计或复现文档 | 不含原始比赛数据 | `ec5706692dcd8596aa4e5359dbd14662280cca575e36958ef3cfc238c1700b61` |
-| 可选提供 | `docs/M2_NEIGHBORHOOD_DIAGNOSIS.md` | 5,999 | 规则、审计或复现文档 | 不含原始比赛数据 | `cf511e5003c5026a903f603b859faae2bd7eb91bc6897f295dfec8187afb2a70` |
-| 可选提供 | `docs/M2_OPTIMIZER_COMPARISON.md` | 3,013 | 规则、审计或复现文档 | 不含原始比赛数据 | `df9a7e42bab88c4e261f5e29c9a48949decd2b971143e4d9c100123448b866bd` |
-| 可选提供 | `docs/M2_OPTIMIZER_INTERFACE.md` | 5,655 | 规则、审计或复现文档 | 不含原始比赛数据 | `67933cbbd891991893267d88f492613203c0c32504ba226c5de4bdd7bcc0a666` |
-| 可选提供 | `docs/M2_REVISED_BASELINES.md` | 1,635 | 规则、审计或复现文档 | 不含原始比赛数据 | `317359fbcd988f10b1f79c849f3a5e5fe4953a388f01d430d6921bf04f08deed` |
-| 可选提供 | `docs/M2_RULES_CONFIRMED.md` | 1,592 | 规则、审计或复现文档 | 不含原始比赛数据 | `496049918009a7f91d95dd777826fecb647a5244f40626bf07701267003cf188` |
-| 可选提供 | `docs/MILP_LNS_RESULTS.md` | 6,101 | 规则、审计或复现文档 | 不含原始比赛数据 | `410810409904802220abc9b8e8263d0f5f5b9f0554dc63345f3a549980f6ee00` |
-| 可选提供 | `docs/README.md` | 3,904 | 规则、审计或复现文档 | 不含原始比赛数据 | `4c5d94d530a2479c4fd82d32e75c3baedd473fcac20f7a4502bce7fcae0be28d` |
-| 可选提供 | `docs/RUNBOOK.md` | 2,483 | 规则、审计或复现文档 | 不含原始比赛数据 | `7c721d745720c7c55d299a72c1493c8db9dde400a568fe2c88de009bcf8f24d7` |
-| 可选提供 | `docs/TEAM_SIX_TARGET_RECOVERY.md` | 8,289 | 规则、审计或复现文档 | 不含原始比赛数据 | `3002e71a9cac605a08dbe70eb2b8645b10cede73e53fcba014e4f2ef86988e56` |
-| 可选提供 | `tools/prepare_famou_package.py` | 9,054 | 材料包说明或工具 | 不含原始比赛数据 | `512b21e887fed27a1b9a5ba0a4e23c0a8683b7da4a2d74fbb347f9a15f36eaaf` |
+| 可选提供 | `docs/README.md` | 4,038 | 规则、审计或复现文档 | 不含原始比赛数据 | `d8c50c076716d132795893d58bb7fecb40ef4af1474c27aa67c8e4230149a4f0` |
+| 可选提供 | `docs/RUNBOOK.md` | 2,494 | 规则、审计或复现文档 | 不含原始比赛数据 | `6a232e753409134471ecc21ef79ad6b1a1c0c4f2fa238a605a0845ee7904575d` |
+| 可选提供 | `docs/m1/M1_FORMAL_DATA_MANIFEST.md` | 2,529 | 规则、审计或复现文档 | 不含原始比赛数据 | `9e5475f24ba93b97191be5d11f7ad624839f11910572ccc09053759eb207366e` |
+| 可选提供 | `docs/m1/M1_RESULTS_README.md` | 3,829 | 规则、审计或复现文档 | 不含原始比赛数据 | `8f1e6eb6a426747530b756eb7a0a694441722eff972b26a2553a1883bbef615a` |
+| 可选提供 | `docs/m2/M2_BOTTLENECK_ANALYSIS.md` | 4,440 | 规则、审计或复现文档 | 不含原始比赛数据 | `38a0caff2a5564d7611dc92b7831e5780db329890a528a725732361022de4e7b` |
+| 可选提供 | `docs/m2/M2_MATH_MODULE_AUDIT.md` | 12,402 | 规则、审计或复现文档 | 不含原始比赛数据 | `03512495245e69eaad1ef148e68f4e3d4e3b1d847aebd07d01175190c8db6cab` |
+| 可选提供 | `docs/m2/M2_MATH_OPT_FEASIBILITY.md` | 5,815 | 规则、审计或复现文档 | 不含原始比赛数据 | `ec5706692dcd8596aa4e5359dbd14662280cca575e36958ef3cfc238c1700b61` |
+| 可选提供 | `docs/m2/M2_NEIGHBORHOOD_DIAGNOSIS.md` | 5,999 | 规则、审计或复现文档 | 不含原始比赛数据 | `cf511e5003c5026a903f603b859faae2bd7eb91bc6897f295dfec8187afb2a70` |
+| 可选提供 | `docs/m2/M2_OPTIMIZER_COMPARISON.md` | 3,013 | 规则、审计或复现文档 | 不含原始比赛数据 | `df9a7e42bab88c4e261f5e29c9a48949decd2b971143e4d9c100123448b866bd` |
+| 可选提供 | `docs/m2/M2_OPTIMIZER_INTERFACE.md` | 5,655 | 规则、审计或复现文档 | 不含原始比赛数据 | `67933cbbd891991893267d88f492613203c0c32504ba226c5de4bdd7bcc0a666` |
+| 可选提供 | `docs/m2/M2_REVISED_BASELINES.md` | 1,635 | 规则、审计或复现文档 | 不含原始比赛数据 | `317359fbcd988f10b1f79c849f3a5e5fe4953a388f01d430d6921bf04f08deed` |
+| 可选提供 | `docs/m2/M2_RULES_CONFIRMED.md` | 1,592 | 规则、审计或复现文档 | 不含原始比赛数据 | `496049918009a7f91d95dd777826fecb647a5244f40626bf07701267003cf188` |
+| 可选提供 | `docs/m2/MILP_LNS_RESULTS.md` | 6,101 | 规则、审计或复现文档 | 不含原始比赛数据 | `410810409904802220abc9b8e8263d0f5f5b9f0554dc63345f3a549980f6ee00` |
+| 可选提供 | `docs/team/TEAM_SIX_TARGET_RECOVERY.md` | 8,289 | 规则、审计或复现文档 | 不含原始比赛数据 | `3002e71a9cac605a08dbe70eb2b8645b10cede73e53fcba014e4f2ef86988e56` |
+| 可选提供 | `tools/prepare_famou_package.py` | 9,304 | 材料包说明、配置或工具 | 不含原始比赛数据 | `7b4df27562d5db6497cd7898de41bd7af2b7e62e30657ed6fc2053688202d52e` |
 
 ## 包外恢复项
 

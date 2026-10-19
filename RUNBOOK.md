@@ -62,7 +62,7 @@ The output directory must be new. The optimizer refuses to overwrite an existing
 
 ## Champion identity
 
-The complete current champion is distributed only through an authorized team/FAMOU channel. Verify its CSV against `M2_CURRENT_CHAMPION.json` before use. The accepted identity is:
+The complete current champion is distributed only through an authorized team/FAMOU channel. Verify its CSV against `m2_results/M2_CURRENT_CHAMPION.json` before use. The accepted identity is:
 
 ```text
 coverage 9849

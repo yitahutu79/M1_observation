@@ -1,0 +1,14 @@
+path,type,purpose,git_status,disposition
+README.md / RUNBOOK.md,files,project entry points,tracked,commit
+docs/,directory,"organized rules, M1, M2, team, FAMOU, and repository documentation",tracked,commit
+*.py at repository root,files,"stable executable modules, CLIs, and tests",mixed,keep paths stable; tracked core only
+m1_results/,directory,"compact M1 samples, manifests, hashes, and acceptance evidence",contains tracked files,selective commit
+m1_validation/formal_20261001_v2/,directory,full accepted M1 v2 cache,ignored,share out of band
+m2_results/,directory,"champion identity, schema sample, and explanation",tracked,commit
+m2_*_results/ and m2_optimizer_results/,directories,"detailed optimizer schedules, traces, and checkpoints",ignored,retain locally
+team_cross_validation_20261019/,directory,cross-team source package and full audit workspace,ignored,authorized local only
+team_recovery_results*/,directories,"recovery runs, failures, SQLite indexes, and evidence",ignored,retain locally
+artifacts/,directory,offline FAMOU archives and delivery bundles,ignored,manual authorized delivery
+local_archive/,directory,superseded reports and tables retained for traceability,ignored,local historical reference
+data/,directory,"TLE, station, priority, and ephemeris inputs",mixed/restricted,redistribution permission required
+.venv/ __pycache__/ .DS_Store,local files,environment and caches,ignored,exclude
