@@ -74,3 +74,18 @@ m2_optimizer/champion/CHAMPION_SCHEDULE.csv
 m2_optimizer/champion/CHAMPION_VIOLATIONS.csv
 m2_optimizer/current_best/M2_OPTIMIZER_BEST_SCHEDULE.csv
 m2_optimizer/current_best/REFEREE_VIOLATIONS.csv
+
+# Cross-team source packages and local recovery experiments (restricted/derived)
+team_cross_validation_20261019/
+team_recovery_results*/
+TEAM_RECOVERY_BEST_SCHEDULE.csv
+TEAM_RECOVERY_OPERATIONS.csv
+TEAM_RECOVERY_SCORE_CURVE.csv
+TEAM_SCHEDULE_COMPARISON.csv
+TEAM_UNREACHABLE_TARGET_AUDIT.csv
+DELETE_MANIFEST.csv
+
+# Local FAMOU delivery bundles stay outside ordinary Git history.
+artifacts/FAMOU_*/
+artifacts/FAMOU_*.tar.gz
+artifacts/FAMOU_*.tar.gz.sha256

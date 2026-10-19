@@ -1,4 +1,4 @@
-"""Build the lightweight, platform-neutral FAMOU review bundle."""
+"""Build the lightweight, platform-neutral FAMOU autonomous-optimization bundle."""
 from __future__ import annotations
 
 import csv
@@ -9,57 +9,56 @@ import tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PACKAGE_NAME = "FAMOU_M2_PREINTEGRATION_20261015"
+PACKAGE_NAME = "FAMOU_M2_AUTONOMOUS_20261019"
 OUT = ROOT / "artifacts" / PACKAGE_NAME
 
 CORE = [
-    "m1.py", "visibility.py", "formal_cache.py", "formal_recompute_v2.py", "optical_validation.py",
-    "validator.py", "formal_validate_v2.py", "m2_scheduler.py", "m2_referee.py",
+    "m1.py", "visibility.py", "formal_cache.py", "formal_recompute_v2.py",
+    "optical_validation.py", "validator.py", "m2_scheduler.py", "m2_referee.py",
     "m2_local_search.py", "m2_max_coverage_score.py", "m2_math_opt_feasibility.py",
     "m2_neighborhood_diagnosis.py", "m2_milp_lns.py", "m2_optimizer_interface.py",
-    "run_m2_optimizer.py", "run_m2_optimizer_comparison.py", "night_first_prototype.py",
+    "run_m2_optimizer.py", "run_m2_optimizer_comparison.py",
 ]
 TESTS = [
     "test_code_fixes.py", "test_formal_cache.py", "test_visibility.py", "test_m2.py",
-    "test_m2_math_opt.py", "test_m2_optimizer_interface.py", "test_night_first_prototype.py",
+    "test_m2_math_opt.py", "test_m2_optimizer_interface.py",
 ]
 DOCS = [
     "README.md", "RUNBOOK.md", "CONTEST_RULES.md", "FAMOU_TASK.md",
     "M1_FORMAL_DATA_MANIFEST.md", "M1_RESULTS_README.md", "M2_RULES_CONFIRMED.md",
     "M2_REVISED_BASELINES.md", "M2_BOTTLENECK_ANALYSIS.md", "M2_MATH_OPT_FEASIBILITY.md",
     "M2_NEIGHBORHOOD_DIAGNOSIS.md", "MILP_LNS_RESULTS.md", "M2_OPTIMIZER_INTERFACE.md",
-    "M2_OPTIMIZER_COMPARISON.md",
+    "M2_OPTIMIZER_COMPARISON.md", "M2_MATH_MODULE_AUDIT.md",
+    "TEAM_SIX_TARGET_RECOVERY.md",
 ]
-CONFIG = ["requirements.txt", "requirements-validation.txt", "m2_config.json"]
+CONFIG = ["requirements.txt", "requirements-validation.txt", "m2_config.json", "M2_CURRENT_CHAMPION.json"]
 
 
 def sha256(path: Path) -> str:
-    digest = hashlib.sha256(path.read_bytes())
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
     return digest.hexdigest()
 
 
 def copy(relative: str, target: str | None = None) -> None:
     source = ROOT / relative
+    if not source.is_file():
+        raise FileNotFoundError(source)
     destination = OUT / (target or relative)
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
 
 
-def sanitize_json(source: Path, destination: Path) -> None:
-    value = source.read_text(encoding="utf-8")
-    value = value.replace(str(ROOT) + "/", "")
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(value, encoding="utf-8")
-
-
-def sanitize_text(source: Path, destination: Path) -> None:
+def sanitized_copy(source: Path, destination: Path) -> None:
     value = source.read_text(encoding="utf-8").replace(str(ROOT) + "/", "")
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(value, encoding="utf-8")
 
 
 def schedule_sample(source: Path, destination: Path, per_station: int = 10) -> None:
-    selected = []
+    selected: list[dict] = []
     counts: dict[str, int] = {}
     with source.open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -79,7 +78,11 @@ def schedule_sample(source: Path, destination: Path, per_station: int = 10) -> N
 def main() -> None:
     if OUT.exists():
         raise FileExistsError(f"refusing to overwrite existing package: {OUT}")
+    archive = OUT.parent / f"{PACKAGE_NAME}.tar.gz"
+    if archive.exists():
+        raise FileExistsError(f"refusing to overwrite existing archive: {archive}")
     OUT.mkdir(parents=True)
+
     for relative in CORE:
         copy(relative, f"code/{relative}")
     for relative in TESTS:
@@ -88,48 +91,76 @@ def main() -> None:
         copy(relative, f"docs/{relative}")
     for relative in CONFIG:
         copy(relative, relative)
+    copy("prepare_famou_package.py", "tools/prepare_famou_package.py")
+
     for path in (ROOT / "m1_results").rglob("*"):
         if path.is_file():
             copy(path.relative_to(ROOT).as_posix())
 
-    champion = ROOT / "m2_optimizer/champion"
-    current = ROOT / "m2_optimizer/current_best"
-    for name in ("CHAMPION_SCHEDULE.csv", "champion_manifest.json", "champion_referee.json", "m2_config.json"):
-        copy((champion / name).relative_to(ROOT).as_posix(), f"results/champion/{name}")
-    for name in ("M2_OPTIMIZER_BEST_SCHEDULE.csv", "best_manifest.json", "referee.json"):
-        copy((current / name).relative_to(ROOT).as_posix(), f"results/current_best/{name}")
-
-    comparison = ROOT / "m2_optimizer_results/comparison_300s_seed20261017"
-    sanitize_json(comparison / "comparison.json", OUT / "results/comparison/comparison.public.json")
-    sanitize_text(comparison / "comparison.csv", OUT / "results/comparison/comparison.csv")
-    for mode in ("fast_local_300s_seed20261017", "hybrid_300s_seed20261017"):
-        copy((comparison / mode / "operations.jsonl").relative_to(ROOT).as_posix(),
-             f"results/comparison/{mode}.operations.jsonl")
-
+    # The current champion is intentionally present only in this authorized offline bundle.
+    copy("TEAM_RECOVERY_BEST_SCHEDULE.csv", "results/current_champion/TEAM_RECOVERY_BEST_SCHEDULE.csv")
+    copy("team_recovery_results/FINAL_REFEREE_SUMMARY.json",
+         "results/current_champion/FINAL_REFEREE_SUMMARY.json")
+    copy("team_recovery_results/FINAL_REFEREE_VIOLATIONS.csv",
+         "results/current_champion/FINAL_REFEREE_VIOLATIONS.csv")
+    copy("team_recovery_results/DELIVERABLE_SHA256.txt",
+         "results/current_champion/RECOVERY_DELIVERABLE_SHA256.txt")
+    schedule_sample(ROOT / "TEAM_RECOVERY_BEST_SCHEDULE.csv",
+                    OUT / "samples/M2_CURRENT_CHAMPION_SAMPLE.csv")
     copy("m1_results/C_OPTICAL_SAMPLE.csv", "samples/C_OPTICAL_SAMPLE.csv")
-    schedule_sample(current / "M2_OPTIMIZER_BEST_SCHEDULE.csv",
-                    OUT / "samples/M2_BEST_SCHEDULE_SAMPLE.csv")
 
-    (OUT / "PACKAGE_README.md").write_text("""# Lightweight FAMOU M2 Pre-integration Package
+    # Fixed-seed, equal-budget evidence used by the mathematical-module audit.
+    comparison_sources = {
+        "fast_local": ROOT / "team_recovery_results/math_module_audit_runs/fast_local_300s_seed20261019",
+        "hybrid": ROOT / "team_recovery_results/optimization_runs/team_recovery_hybrid_300s_seed20261019",
+    }
+    for mode, source in comparison_sources.items():
+        for name in ("result.json", "operations.jsonl", "referee_violations.csv"):
+            sanitized_copy(source / name, OUT / f"results/math_audit_300s/{mode}/{name}")
 
-This package is a platform-neutral, offline review bundle. It contains source, tests, confirmed rules,
-accepted small M1 evidence, the frozen M2 champion, the current validated hybrid result, comparison logs,
-and deterministic samples. It does not contain the full M1 cache or original TLE/station/priority inputs.
+    (OUT / "PACKAGE_README.md").write_text("""# FAMOU M2 Autonomous Optimization Package
 
-Distribution status: the schedules and samples are derived from competition data. Use this bundle only in
-an authorized team or competition-review channel until redistribution permission is confirmed.
+This authorized offline bundle contains the accepted M1/M2 code, independent Referee, confirmed rules,
+unit tests, compact M1 evidence, the current 9,849-coverage champion, and fixed-budget comparison logs.
+The champion has raw score 32,311.5853472602 and passed the independent Referee with zero violations.
 
-Start with `docs/FAMOU_TASK.md`, `docs/CONTEST_RULES.md`, and `docs/RUNBOOK.md`. Verify all files using
-`SHA256SUMS.txt`. No FAMOU SDK or remote API is included or assumed.
+Start with `docs/FAMOU_TASK.md`, `docs/CONTEST_RULES.md`, `M2_CURRENT_CHAMPION.json`, and
+`docs/RUNBOOK.md`. Verify every file with `SHA256SUMS.txt` before execution.
+
+The full formal M1 v2 cache and original TLE/station/priority/ephemeris inputs are excluded. Restore them
+through an authorized channel and verify their published hashes. No FAMOU SDK or API is fabricated or
+assumed. Competition-derived schedules in this bundle must remain in the authorized review channel.
 """, encoding="utf-8")
-    (OUT / "EXTERNAL_DATA_REQUIRED.md").write_text("""# External Data Required for Full Runs
+    (OUT / "EXTERNAL_DATA_REQUIRED.md").write_text("""# External Data Required
 
-The bundle intentionally excludes the original TLE file, station coordinates, priority archive, DE421
-ephemeris, and the 1.4 GiB formal M1 v2 cache. Obtain them through an approved restricted channel, restore
-the paths described in `docs/RUNBOOK.md`, and verify M1 with `m1_results/M1_V2_SHA256SUMS.txt`.
+Full execution requires the original TLE, station coordinates, priority archive, DE421 ephemeris, and the
+formal M1 v2 cache. Restore the cache at `m1_validation/formal_20261001_v2/` and verify it with
+`m1_results/M1_V2_SHA256SUMS.txt`. Do not substitute v1 or unverified cache files.
+""", encoding="utf-8")
+    (OUT / "PACKAGE_TESTS.md").write_text("""# Package Test Commands
 
-The included synthetic/temporary-fixture unit tests can run without the complete cache. Tests that import
-the formal TLE/station/priority inputs require the authorized external files.
+Data-independent quick tests:
+
+```bash
+PYTHONPATH=code python -m unittest -v \
+  test_code_fixes test_m2 test_m2_math_opt test_m2_optimizer_interface \
+  test_visibility.SyntheticTests
+```
+
+Run `PYTHONPATH=code python -m unittest discover -s tests -v` only after restoring the authorized
+TLE, station, priority, and ephemeris inputs at the documented paths.
+""", encoding="utf-8")
+    (OUT / "AI_OUTPUT_CHECKLIST.md").write_text("""# Required FAMOU Output Checklist
+
+- [ ] AI_CHANGELOG.md identifies every autonomous code/config change.
+- [ ] Machine-readable diff against supplied baseline is included.
+- [ ] Input and output SHA-256 values are recorded.
+- [ ] Fixed seed, budget, hardware, and end-to-end elapsed time are recorded.
+- [ ] Independent Referee reports coverage 9,849 and zero violations.
+- [ ] Raw score strictly exceeds 32,311.5853472602 before promotion.
+- [ ] Failed and rejected trials remain visible in operation logs.
+- [ ] No M1, rule, tolerance, or Referee change is used to obtain acceptance.
+- [ ] MILP/local discrete optimality is not described as global schedule optimality.
 """, encoding="utf-8")
 
     rows = []
@@ -138,24 +169,31 @@ the formal TLE/station/priority inputs require the authorized external files.
             continue
         relative = path.relative_to(OUT).as_posix()
         derived = relative.startswith(("results/", "samples/", "m1_results/"))
-        rows.append({"path": relative, "size_bytes": path.stat().st_size,
-            "sha256": sha256(path), "competition_derived": "yes" if derived else "no"})
+        rows.append({
+            "path": relative,
+            "size_bytes": path.stat().st_size,
+            "sha256": sha256(path),
+            "competition_derived": "yes" if derived else "no",
+        })
     with (OUT / "PACKAGE_MANIFEST.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
-    checksums = "".join(f"{row['sha256']}  {row['path']}\n" for row in rows)
-    (OUT / "SHA256SUMS.txt").write_text(checksums, encoding="utf-8")
+    (OUT / "SHA256SUMS.txt").write_text(
+        "".join(f"{row['sha256']}  {row['path']}\n" for row in rows), encoding="utf-8")
 
-    archive = OUT.parent / f"{PACKAGE_NAME}.tar.gz"
     with tarfile.open(archive, "w:gz") as bundle:
         bundle.add(OUT, arcname=PACKAGE_NAME)
     archive_hash = sha256(archive)
-    (OUT.parent / f"{PACKAGE_NAME}.tar.gz.sha256").write_text(
-        f"{archive_hash}  {archive.name}\n", encoding="utf-8")
-    print(json.dumps({"package": str(OUT), "archive": str(archive),
-        "archive_sha256": archive_hash, "files": len(rows) + 2,
-        "bytes": sum(path.stat().st_size for path in OUT.rglob("*") if path.is_file())}, indent=2))
+    checksum = OUT.parent / f"{PACKAGE_NAME}.tar.gz.sha256"
+    checksum.write_text(f"{archive_hash}  {archive.name}\n", encoding="utf-8")
+    print(json.dumps({
+        "package": str(OUT),
+        "archive": str(archive),
+        "archive_sha256": archive_hash,
+        "manifest_files": len(rows),
+        "package_bytes": sum(path.stat().st_size for path in OUT.rglob("*") if path.is_file()),
+    }, indent=2))
 
 
 if __name__ == "__main__":
