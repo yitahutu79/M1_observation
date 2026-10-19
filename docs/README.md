@@ -22,6 +22,8 @@ The full M1 v2 cache is intentionally excluded from ordinary Git history.
 - `m2/M2_OPTIMIZER_INTERFACE.md`: unified Fast Local, MILP rebuild, and Hybrid interface.
 - `m2/M2_OPTIMIZER_COMPARISON.md`: fixed-budget optimizer comparison.
 - `m2/M2_MATH_MODULE_AUDIT.md`: mathematical-module audit and default-mode recommendation.
+- `m2/M2_EXPERIMENT_HISTORY.md`: report-ready record of successful, rejected, and failed experiments.
+- `m2/M2_EXPERIMENT_INDEX.csv`: compact index from each experiment to its local raw evidence.
 - Other files in `m2/` preserve the MILP, neighborhood, and MILP-LNS experiment evidence.
 
 The accepted champion identity is stored in `../m2_results/M2_CURRENT_CHAMPION.json`. The complete
