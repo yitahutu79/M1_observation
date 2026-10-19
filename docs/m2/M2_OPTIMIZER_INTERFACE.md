@@ -31,7 +31,7 @@ request = OptimizationRequest(
     mode="hybrid",                 # fast_local | milp_rebuild | hybrid
     budget_s=300.0,
     seed=20261017,
-    output_dir=Path("m2_optimizer_results/my_run"),
+    output_dir=Path("local_archive/m2_results/optimizer_runs/my_run"),
     run_name="hybrid_trial",
     stagnation_s=12.0,
     local_milp_limit_s=5.0,
@@ -58,14 +58,14 @@ result = optimize_schedule(request)
   --schedule m2_optimizer/champion/CHAMPION_SCHEDULE.csv \
   --budget 300 \
   --seed 20261017 \
-  --output-dir m2_optimizer_results/manual_fast
+  --output-dir local_archive/m2_results/optimizer_runs/manual_fast
 
 .venv/bin/python run_m2_optimizer.py \
   --mode milp_rebuild \
   --schedule m2_optimizer/champion/CHAMPION_SCHEDULE.csv \
   --budget 300 \
   --seed 20261017 \
-  --output-dir m2_optimizer_results/manual_milp
+  --output-dir local_archive/m2_results/optimizer_runs/manual_milp
 
 .venv/bin/python run_m2_optimizer.py \
   --mode hybrid \
@@ -73,7 +73,7 @@ result = optimize_schedule(request)
   --budget 300 \
   --seed 20261017 \
   --stagnation-seconds 12 \
-  --output-dir m2_optimizer_results/manual_hybrid
+  --output-dir local_archive/m2_results/optimizer_runs/manual_hybrid
 ```
 
 Reproduce the controlled comparison with:

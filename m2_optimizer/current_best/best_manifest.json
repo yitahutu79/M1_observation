@@ -1,6 +1,6 @@
 {
   "schema_version": "m2-optimizer-best-1.0",
-  "source": "m2_optimizer_results/comparison_300s_seed20261017/hybrid_300s_seed20261017/candidate_schedule.csv",
+  "source": "local_archive/m2_results/optimizer_runs/comparison_300s_seed20261017/hybrid_300s_seed20261017/candidate_schedule.csv",
   "schedule": "m2_optimizer/current_best/M2_OPTIMIZER_BEST_SCHEDULE.csv",
   "schedule_sha256": "a8889d09735327ecb0a224973da3ffe831a6a9796eeb2a87f15bf4eceb3e8311",
   "mode": "hybrid",

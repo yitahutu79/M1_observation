@@ -15,7 +15,7 @@ def main() -> None:
     parser.add_argument("--schedule", type=Path, required=True)
     parser.add_argument("--budget", type=float, required=True)
     parser.add_argument("--seed", type=int, required=True)
-    parser.add_argument("--output-dir", type=Path, default=Path("m2_optimizer_results"))
+    parser.add_argument("--output-dir", type=Path, default=Path("local_archive/m2_results/optimizer_runs"))
     parser.add_argument("--run-name")
     parser.add_argument("--stagnation-seconds", type=float, default=12.0)
     args = parser.parse_args()

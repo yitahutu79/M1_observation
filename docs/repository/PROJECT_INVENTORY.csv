@@ -5,8 +5,8 @@ docs/,directory,"organized rules, M1, M2, team, FAMOU, and repository documentat
 m1_results/,directory,"compact M1 samples, manifests, hashes, and acceptance evidence",contains tracked files,selective commit
 m1_validation/formal_20261001_v2/,directory,full accepted M1 v2 cache,ignored,share out of band
 m2_results/,directory,"champion identity, schema sample, explanation, and local full champion",contains tracked and ignored,"commit metadata only; full schedule stays local"
-m2_*_results/ and m2_optimizer_results/,directories,"detailed optimizer schedules, traces, and checkpoints",ignored,retain locally
-team_cross_validation_20261019/,directory,cross-team source package and full audit workspace,ignored,authorized local only
+m2_*_results/ and local_archive/m2_results/optimizer_runs/,directories,"detailed optimizer schedules, traces, and checkpoints",ignored,retain locally
+local_archive/team_cross_validation_20261019/,directory,cross-team source package and full audit workspace,ignored,authorized local only
 team_recovery_results*/,directories,"recovery runs, failures, SQLite indexes, and evidence",ignored,retain locally
 artifacts/,directory,offline FAMOU archives and delivery bundles,ignored,manual authorized delivery
 local_archive/,directory,superseded reports, scripts, and tables retained for traceability,ignored,local historical reference

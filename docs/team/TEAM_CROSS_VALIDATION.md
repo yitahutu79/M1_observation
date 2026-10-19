@@ -17,7 +17,7 @@ The team plan is therefore a valid Pareto seed and integration candidate. It mus
 
 ## Source identity and preservation
 
-The original archive was extracted to `team_cross_validation_20261019/original_package/` and made read-only. The archive contained 54 files totaling about 9.7 MiB after extraction. Per-file hashes are in `team_cross_validation_20261019/PACKAGE_FILE_SHA256.txt`.
+The original archive was extracted to `local_archive/team_cross_validation_20261019/original_package/` and made read-only. The archive contained 54 files totaling about 9.7 MiB after extraction. Per-file hashes are in `local_archive/team_cross_validation_20261019/PACKAGE_FILE_SHA256.txt`.
 
 | Source | SHA-256 |
 |---|---|

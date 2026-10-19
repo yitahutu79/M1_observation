@@ -44,8 +44,8 @@ The frozen traditional champion remains unchanged as the provenance baseline. Th
 
 ## Machine-readable artifacts
 
-- `m2_optimizer_results/comparison_300s_seed20261017/comparison.csv`
-- `m2_optimizer_results/comparison_300s_seed20261017/comparison.json`
+- `local_archive/m2_results/optimizer_runs/comparison_300s_seed20261017/comparison.csv`
+- `local_archive/m2_results/optimizer_runs/comparison_300s_seed20261017/comparison.json`
 - per-mode `operations.jsonl`, `result.json`, candidate schedule and Referee report
 - `m2_optimizer/current_best/best_manifest.json`
 

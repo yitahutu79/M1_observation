@@ -168,11 +168,11 @@ def write_full_report(results: list[dict], integrity: dict, audits: dict[int, di
         "- This is static six-day planning only; no urgent-task or dynamic-replanning model is included.",
         "", "## Reproduce", "", "```bash",
         ".venv/bin/python -m unittest -v test_m2",
-        ".venv/bin/python run_m2_baselines.py --sizes 1000 10000 --out m2_results_confirmed",
+        ".venv/bin/python run_m2_baselines.py --sizes 1000 10000 --out local_archive/m2_results/results_confirmed",
         "```", "",
         "Independent Referee example:", "", "```bash",
         ".venv/bin/python m2_referee.py \\",
-        "  --schedule m2_results_confirmed/targets_10000/coverage_score_hybrid_schedule.csv \\",
+        "  --schedule local_archive/m2_results/results_confirmed/targets_10000/coverage_score_hybrid_schedule.csv \\",
         "  --target-limit 10000 \\",
         "  --violations /tmp/m2_violations.csv \\",
         "  --summary /tmp/m2_referee_summary.json",
@@ -187,7 +187,7 @@ def main():
     parser.add_argument("--priority", default="data/优先级.zip")
     parser.add_argument("--config", default="m2_config.json")
     parser.add_argument("--sizes", nargs="+", type=int, default=[1000, 10000])
-    parser.add_argument("--out", default="m2_results_confirmed")
+    parser.add_argument("--out", default="local_archive/m2_results/results_confirmed")
     args = parser.parse_args()
     cache, priority, config_path, out = map(Path, [args.cache, args.priority, args.config, args.out])
     config = json.loads(config_path.read_text(encoding="utf-8"))

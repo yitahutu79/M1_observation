@@ -63,7 +63,7 @@ The maximum reported local MILP gap was `6.20e-11`. This supports near-optimalit
 - Overall station utilization: 0.381794
 - Independent Referee: PASS, 0 violations
 
-The best schedule from the comparison method is kept separately at `m2_milp_lns_results/OVERALL_COMPARISON_BEST.csv`:
+The best schedule from the comparison method is kept separately at `local_archive/m2_results/milp_lns/OVERALL_COMPARISON_BEST.csv`:
 
 - Method: traditional local search
 - Score: 29556.345194860733
@@ -80,7 +80,7 @@ The best schedule from the comparison method is kept separately at `m2_milp_lns_
 .venv/bin/python -m unittest discover -v
 ```
 
-The full run takes roughly 1.7 hours on the measured machine. Detailed curves and operations are in `MILP_LNS_CURVE.csv` and `MILP_LNS_OPERATIONS.csv`. Per-run schedules, checkpoints, candidate violations, and final violations are under `m2_milp_lns_results/`.
+The full run takes roughly 1.7 hours on the measured machine. Detailed curves and operations are in `MILP_LNS_CURVE.csv` and `MILP_LNS_OPERATIONS.csv`. Per-run schedules, checkpoints, candidate violations, and final violations are under `local_archive/m2_results/milp_lns/`.
 
 ## Decision
 

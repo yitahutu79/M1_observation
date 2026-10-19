@@ -17,11 +17,11 @@ def main() -> None:
     parser.add_argument("--budget", type=float, default=300.0)
     parser.add_argument("--seed", type=int, default=20261017)
     parser.add_argument("--output-dir", type=Path,
-                        default=Path("m2_optimizer_results/comparison_300s_seed20261017"))
+                        default=Path("local_archive/m2_results/optimizer_runs/comparison_300s_seed20261017"))
     parser.add_argument("--stagnation-seconds", type=float, default=12.0)
     args = parser.parse_args()
     champion_dir = ROOT / "m2_optimizer/champion"
-    freeze_champion(ROOT / "m2_milp_lns_results/OVERALL_COMPARISON_BEST.csv",
+        freeze_champion(ROOT / "local_archive/m2_results/milp_lns/OVERALL_COMPARISON_BEST.csv",
                     champion_dir, 20261017, 600.0)
     champion = champion_dir / "CHAMPION_SCHEDULE.csv"
     args.output_dir.mkdir(parents=True, exist_ok=True)

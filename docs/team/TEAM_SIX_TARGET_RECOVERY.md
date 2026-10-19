@@ -8,8 +8,8 @@ The final schedule therefore improves the original team score by **25.5291716535
 
 ## Frozen input
 
-- Converted team schedule: `team_cross_validation_20261019/work/TEAM_PLAN_CONVERTED.csv`
-- Frozen copy: `team_recovery_results/frozen_initial/TEAM_PLAN_CONVERTED.csv`
+- Converted team schedule: `local_archive/team_cross_validation_20261019/work/TEAM_PLAN_CONVERTED.csv`
+- Frozen copy: `m2_results/full/team_recovery_evidence/frozen_initial/TEAM_PLAN_CONVERTED.csv`
 - SHA-256: `5116e40454eeedc18f5faf27db93f683257face84577f4c6009c8973f50a7c01`
 - Original metrics: coverage 9843, score 32286.056175606656, 13,249 tasks, 3,406 repeats, Referee 0 violations.
 - Recovery seed / optimizer seed: `20261019`.
@@ -75,10 +75,10 @@ The Referee independently checked every scheduled task against its cited formal-
 | formal_A_manifest | `m1_validation/formal_20261001_v2/A_orbit/manifest.json` | `59cfdee9b8de84b2ffd02263b346fd85dbc66dedead72a38e8eb50836707cfa9` |
 | formal_B_manifest | `m1_validation/formal_20261001_v2/B_night/manifest.json` | `7f780154beae24594b129554a1a9461ab6f0eaeaed4157fbf06c4c0cc9b08c4d` |
 | formal_C_manifest | `m1_validation/formal_20261001_v2/C_optical/manifest.json` | `ddad4ed5d9840a1da834baf7064b13c4a892e898b927c1d71849ede9a59e3da6` |
-| team_converted_original | `team_cross_validation_20261019/work/TEAM_PLAN_CONVERTED.csv` | `5116e40454eeedc18f5faf27db93f683257face84577f4c6009c8973f50a7c01` |
-| team_raw_original | `team_cross_validation_20261019/original_package/03_new_idea_official/plan_utc_ours.csv` | `901d07d4fb6e924c73c6f53e3b18a4c0a5840ebb02a2a045808b8d7e3bc8a4b4` |
-| team_converted_frozen_copy | `team_recovery_results/frozen_initial/TEAM_PLAN_CONVERTED.csv` | `5116e40454eeedc18f5faf27db93f683257face84577f4c6009c8973f50a7c01` |
-| first_9849_recovered | `team_recovery_results/FIRST_9849_RECOVERED_SCHEDULE.csv` | `6fd9dfd865e05c184ee183cd9aee6b23501d5aedfdea9b60083a95683234504b` |
+| team_converted_original | `local_archive/team_cross_validation_20261019/work/TEAM_PLAN_CONVERTED.csv` | `5116e40454eeedc18f5faf27db93f683257face84577f4c6009c8973f50a7c01` |
+| team_raw_original | `local_archive/team_cross_validation_20261019/original_package/03_new_idea_official/plan_utc_ours.csv` | `901d07d4fb6e924c73c6f53e3b18a4c0a5840ebb02a2a045808b8d7e3bc8a4b4` |
+| team_converted_frozen_copy | `m2_results/full/team_recovery_evidence/frozen_initial/TEAM_PLAN_CONVERTED.csv` | `5116e40454eeedc18f5faf27db93f683257face84577f4c6009c8973f50a7c01` |
+| first_9849_recovered | `m2_results/full/team_recovery_evidence/FIRST_9849_RECOVERED_SCHEDULE.csv` | `6fd9dfd865e05c184ee183cd9aee6b23501d5aedfdea9b60083a95683234504b` |
 | historical_local_search_base | `M2_BEST_SCHEDULE.csv` | `ac2fd41a2e2ac58dc56e6e21daefaadedaaca307f18973c908847d92e5d82d99` |
 | historical_hybrid_champion | `m2_optimizer/current_best/M2_OPTIMIZER_BEST_SCHEDULE.csv` | `a8889d09735327ecb0a224973da3ffe831a6a9796eeb2a87f15bf4eceb3e8311` |
 | best_recovered | `TEAM_RECOVERY_BEST_SCHEDULE.csv` | `9804bf0dbd2bf99d981420fb041b92cf6617391ec826d65a09f700317807723d` |
@@ -90,28 +90,28 @@ The accepted formal M1 v2 A/B/C hashes remain `ba8d52...`, `523937...`, and `f05
 Run from the repository root in a clean result directory. `team_six_target_recovery.py` intentionally refuses to overwrite its frozen output directory.
 
 ```bash
-.venv/bin/python team_cross_validation_20261019/work/team_six_target_recovery.py
+.venv/bin/python local_archive/team_cross_validation_20261019/work/team_six_target_recovery.py
 
 /usr/bin/time -p .venv/bin/python run_m2_optimizer.py \
   --mode hybrid \
-  --schedule team_recovery_results/FIRST_9849_RECOVERED_SCHEDULE.csv \
+  --schedule m2_results/full/team_recovery_evidence/FIRST_9849_RECOVERED_SCHEDULE.csv \
   --budget 300 --seed 20261019 \
-  --output-dir team_recovery_results/optimization_runs \
+  --output-dir m2_results/full/team_recovery_evidence/optimization_runs \
   --run-name team_recovery_hybrid_300s_seed20261019
 
 /usr/bin/time -p .venv/bin/python run_m2_optimizer.py \
   --mode hybrid \
-  --schedule team_recovery_results/FIRST_9849_RECOVERED_SCHEDULE.csv \
+  --schedule m2_results/full/team_recovery_evidence/FIRST_9849_RECOVERED_SCHEDULE.csv \
   --budget 600 --seed 20261019 \
-  --output-dir team_recovery_results/optimization_runs \
+  --output-dir m2_results/full/team_recovery_evidence/optimization_runs \
   --run-name team_recovery_hybrid_600s_seed20261019
 
 .venv/bin/python m2_referee.py \
   --schedule TEAM_RECOVERY_BEST_SCHEDULE.csv --target-limit 10000 \
   --cache m1_validation/formal_20261001_v2 --priority data/优先级.zip \
   --config m2_config.json \
-  --violations team_recovery_results/FINAL_REFEREE_VIOLATIONS.csv \
-  --summary team_recovery_results/FINAL_REFEREE_SUMMARY.json
+  --violations m2_results/full/team_recovery_evidence/FINAL_REFEREE_VIOLATIONS.csv \
+  --summary m2_results/full/team_recovery_evidence/FINAL_REFEREE_SUMMARY.json
 ```
 
 ## Deliverables
@@ -119,4 +119,4 @@ Run from the repository root in a clean result directory. `team_six_target_recov
 - `TEAM_RECOVERY_BEST_SCHEDULE.csv`: frozen final best schedule.
 - `TEAM_RECOVERY_OPERATIONS.csv`: recovery actions and all optimizer events, including rejected MILP candidates.
 - `TEAM_RECOVERY_SCORE_CURVE.csv`: coverage-recovery and accepted score-improvement points. Optimizer event timestamps are phase-local where the source log is phase-local; final elapsed time is end-to-end optimizer elapsed.
-- `team_recovery_results/OUTPUT_SHA256.json`: complete artifact and protected-input checksums.
+- `m2_results/full/team_recovery_evidence/OUTPUT_SHA256.json`: complete artifact and protected-input checksums.

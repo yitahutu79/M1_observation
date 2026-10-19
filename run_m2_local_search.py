@@ -17,8 +17,8 @@ ROOT = Path(__file__).resolve().parent
 CACHE = ROOT / "m1_validation/formal_20261001_v2"
 PRIORITY = ROOT / "data/优先级.zip"
 CONFIG = ROOT / "m2_config.json"
-BASE = ROOT / "m2_results_confirmed/targets_10000"
-OUT = ROOT / "m2_local_search_results"
+BASE = ROOT / "local_archive/m2_results/results_confirmed/targets_10000"
+OUT = ROOT / "local_archive/m2_results/local_search"
 INDEX = Path("/tmp/m2_formal_v2_windows.sqlite")
 
 PROFILES = [

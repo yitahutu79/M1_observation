@@ -32,7 +32,7 @@ The implementation applies the confirmed cooldown correctly. `insert_observation
 
 The joint heuristic does not compute a continuous reward combining first coverage, repeat reward, and time cost. Its actual policy is lexicographic: schedule high-, medium-, and low-priority first visits in that order, then run repeat phases in the same priority order. Therefore the “first coverage reward” is implicit in phase order and the repeat reward is considered only after the first-visit phases.
 
-The final joint schedule contains 5,646 covered targets with at least one raw C window after their 48 h cooldown boundary. An exact insertion search over those windows found zero 120 s repeats that also fit the already occupied station calendars with the 30 s transition rule. Representative target IDs and cooldown boundaries are saved in `m2_local_search_results/analysis.json`. This is evidence of capacity fragmentation caused by the phase order, not a cooldown implementation bug. After duration adjustment and local rearrangement, the balanced search inserted 269 legal repeats, confirming that repeat candidates exist when capacity is reopened.
+The final joint schedule contains 5,646 covered targets with at least one raw C window after their 48 h cooldown boundary. An exact insertion search over those windows found zero 120 s repeats that also fit the already occupied station calendars with the 30 s transition rule. Representative target IDs and cooldown boundaries are saved in `local_archive/m2_results/local_search/analysis.json`. This is evidence of capacity fragmentation caused by the phase order, not a cooldown implementation bug. After duration adjustment and local rearrangement, the balanced search inserted 269 legal repeats, confirming that repeat candidates exist when capacity is reopened.
 
 ## Reproducibility
 
@@ -43,4 +43,4 @@ Run from the project root:
 .venv/bin/python -m unittest -v test_m2.py
 ```
 
-The temporary SQLite index is an acceleration structure built from the immutable formal C CSV. It is not a replacement M1 cache. Detailed operation logs, schedules, Referee summaries, and zero-row violation files are under `m2_local_search_results/`.
+The temporary SQLite index is an acceleration structure built from the immutable formal C CSV. It is not a replacement M1 cache. Detailed operation logs, schedules, Referee summaries, and zero-row violation files are under `local_archive/m2_results/local_search/`.

@@ -128,7 +128,7 @@ MILP-LNS 不是统一入口的默认模式。统一 Hybrid 复用了它的 `neig
 
 共同条件：
 
-- 输入：`team_recovery_results/FIRST_9849_RECOVERED_SCHEDULE.csv`
+- 输入：`m2_results/full/team_recovery_evidence/FIRST_9849_RECOVERED_SCHEDULE.csv`
 - 输入 SHA-256：`6fd9dfd865e05c184ee183cd9aee6b23501d5aedfdea9b60083a95683234504b`
 - 初始覆盖：9849
 - 初始得分：32272.45010787999
@@ -138,7 +138,7 @@ MILP-LNS 不是统一入口的默认模式。统一 Hybrid 复用了它的 `neig
 
 Fast Local 输出：
 
-- 路径：`team_recovery_results/math_module_audit_runs/fast_local_300s_seed20261019/candidate_schedule.csv`
+- 路径：`m2_results/full/team_recovery_evidence/math_module_audit_runs/fast_local_300s_seed20261019/candidate_schedule.csv`
 - SHA-256：`565136ed1cee3e5645ef891dc7b096eac75cb040b98fec60921f4f64729e3c85`
 - 最终得分：32309.618653576865
 - 接受操作：49
@@ -146,7 +146,7 @@ Fast Local 输出：
 
 Hybrid 使用已完成的六目标 300 秒结果：
 
-- 路径：`team_recovery_results/optimization_runs/team_recovery_hybrid_300s_seed20261019/candidate_schedule.csv`
+- 路径：`m2_results/full/team_recovery_evidence/optimization_runs/team_recovery_hybrid_300s_seed20261019/candidate_schedule.csv`
 - SHA-256：`b5b5d2bc0ce43783c17fd3709aa30b75cb263bc9f25f65cf9fd57d50d49e2e64`
 - 最终得分：32308.987985455682
 - 接受操作：45，全部来自 Fast Local；MILP 接受 0。

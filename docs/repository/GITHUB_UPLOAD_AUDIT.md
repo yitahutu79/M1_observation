@@ -21,7 +21,7 @@ The exact allowlist is `docs/repository/GITHUB_COMMIT_CANDIDATES.txt`. It contai
 
 - `m1_validation/formal_20261001_v2/` and all historical/full window caches;
 - `m2_results/full/TEAM_RECOVERY_BEST_SCHEDULE.csv` and detailed recovery/optimizer run directories;
-- `team_cross_validation_20261019/` original ZIP/PDF extracts and converted full schedules;
+- `local_archive/team_cross_validation_20261019/` original ZIP/PDF extracts and converted full schedules;
 - failed recovery attempts, SQLite indexes, checkpoints, curves, and detailed solver outputs;
 - `.venv/`, `__pycache__/`, `.DS_Store`, temporary files, and local FAMOU archives;
 - original priority archive and DE421 ephemeris.

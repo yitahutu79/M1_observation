@@ -101,11 +101,11 @@ def main() -> None:
 
     # The current champion is intentionally present only in this authorized offline bundle.
     copy("m2_results/full/TEAM_RECOVERY_BEST_SCHEDULE.csv", "results/current_champion/TEAM_RECOVERY_BEST_SCHEDULE.csv")
-    copy("team_recovery_results/FINAL_REFEREE_SUMMARY.json",
+    copy("m2_results/full/team_recovery_evidence/FINAL_REFEREE_SUMMARY.json",
          "results/current_champion/FINAL_REFEREE_SUMMARY.json")
-    copy("team_recovery_results/FINAL_REFEREE_VIOLATIONS.csv",
+    copy("m2_results/full/team_recovery_evidence/FINAL_REFEREE_VIOLATIONS.csv",
          "results/current_champion/FINAL_REFEREE_VIOLATIONS.csv")
-    copy("team_recovery_results/DELIVERABLE_SHA256.txt",
+    copy("m2_results/full/team_recovery_evidence/DELIVERABLE_SHA256.txt",
          "results/current_champion/RECOVERY_DELIVERABLE_SHA256.txt")
     schedule_sample(ROOT / "m2_results/full/TEAM_RECOVERY_BEST_SCHEDULE.csv",
                     OUT / "samples/M2_CURRENT_CHAMPION_SAMPLE.csv")
@@ -113,8 +113,8 @@ def main() -> None:
 
     # Fixed-seed, equal-budget evidence used by the mathematical-module audit.
     comparison_sources = {
-        "fast_local": ROOT / "team_recovery_results/math_module_audit_runs/fast_local_300s_seed20261019",
-        "hybrid": ROOT / "team_recovery_results/optimization_runs/team_recovery_hybrid_300s_seed20261019",
+        "fast_local": ROOT / "m2_results/full/team_recovery_evidence/math_module_audit_runs/fast_local_300s_seed20261019",
+        "hybrid": ROOT / "m2_results/full/team_recovery_evidence/optimization_runs/team_recovery_hybrid_300s_seed20261019",
     }
     for mode, source in comparison_sources.items():
         for name in ("result.json", "operations.jsonl", "referee_violations.csv"):

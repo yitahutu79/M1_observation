@@ -19,7 +19,7 @@ The earlier four MILP candidate sets contained the complete incumbent combinatio
 | N3, station 10 | 64 | 64 | 0 | yes |
 | N4, station 5 | 88 | 88 | 0 | yes |
 
-Thus the previous zero gains were not caused by an invalid lower bound or an omitted incumbent task. `m2_neighborhood_diagnosis_results/original_four_audit.json` contains the machine-readable audit.
+Thus the previous zero gains were not caused by an invalid lower bound or an omitted incumbent task. `local_archive/m2_results/neighborhood_diagnosis/original_four_audit.json` contains the machine-readable audit.
 
 ## Why the original candidate set was sparse
 
@@ -58,7 +58,7 @@ The original generator improved four of six targeted neighborhoods, even though 
 
 ## Deterministic validation
 
-All 12 reconstructed schedules, covering original and enhanced candidates for six cases, retained 9,849 targets and passed the independent Referee with zero violations. The best isolated result is stored at `m2_neighborhood_diagnosis_results/repeat_chain_62707_enhanced.csv`; it was not copied over the current best schedule.
+All 12 reconstructed schedules, covering original and enhanced candidates for six cases, retained 9,849 targets and passed the independent Referee with zero violations. The best isolated result is stored at `local_archive/m2_results/neighborhood_diagnosis/repeat_chain_62707_enhanced.csv`; it was not copied over the current best schedule.
 
 ## Root-cause classification
 
