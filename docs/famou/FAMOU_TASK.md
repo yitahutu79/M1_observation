@@ -2,7 +2,7 @@
 
 ## Current state
 
-The current data source is the August refined D cache, hash-pinned in `m2_config.json`. The independent Referee is the acceptance gate. Only a 10-target smoke baseline has been generated; create and referee a full 10,000-target baseline before full-scale optimization.
+The current data source is the August refined D cache, hash-pinned in `m2_config.json`. The independent Referee is the acceptance gate. The full 10,000-target baseline is available in `m2_results/aug2026_baseline_v2/`; begin optimization from one or more of its three refereed Pareto schedules and preserve each input hash.
 
 ## Objective
 

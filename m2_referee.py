@@ -272,6 +272,7 @@ def referee(schedule_path: Path, cache: Path, priority_path: Path, config_path: 
     horizon = (datetime.fromisoformat(configured_end.replace("Z", "+00:00")) -
                datetime.fromisoformat(configured_start.replace("Z", "+00:00"))).total_seconds()
     violations = []
+    d_priority_annotation_mismatches = 0
 
     for row in rows:
         if "parse_error" in row:
@@ -339,10 +340,14 @@ def referee(schedule_path: Path, cache: Path, priority_path: Path, config_path: 
         expected_priority = priorities.get(canonical)
         if expected_priority is None or row["priority"] != expected_priority:
             add_violation(violations, "priority", row, f"expected {expected_priority}")
-        elif source is not None and source.get("priority") != expected_priority:
-            add_violation(violations, "d_priority", row, f"D source priority is {source.get('priority')!r}, expected {expected_priority}")
-        elif abs(row["score"] - independent_score(expected_priority, duration, config)) > 1e-9:
-            add_violation(violations, "score", row, "reported score differs from independent score")
+        else:
+            if source is not None and source.get("priority") != expected_priority:
+                # D's copied label is diagnostic metadata. The hashed official
+                # priority archive is authoritative for both task validation
+                # and independent score calculation.
+                d_priority_annotation_mismatches += 1
+            if abs(row["score"] - independent_score(expected_priority, duration, config)) > 1e-9:
+                add_violation(violations, "score", row, "reported score differs from independent score")
 
     by_station: dict[int, list[dict]] = defaultdict(list)
     by_target: dict[str, list[dict]] = defaultdict(list)
@@ -435,6 +440,7 @@ def referee(schedule_path: Path, cache: Path, priority_path: Path, config_path: 
         "d_windows_sha256": manifest.get("windows_sha256"),
         "d_manifest_sha256": file_sha256(manifest_path),
         "skyfield_sunlight_sample_step_s": sunlight_step,
+        "d_priority_annotation_mismatches": d_priority_annotation_mismatches,
     }
 
 

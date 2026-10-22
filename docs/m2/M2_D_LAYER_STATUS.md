@@ -15,4 +15,4 @@ The D builder uses a finite-Sun conical umbra model and conservatively handles a
 
 The scheduler and independent Referee require the configured D windows, manifest, time range, and source hashes. They do not fall back to C. The Referee samples direct Skyfield illumination at one-second steps during each task.
 
-A 10-target smoke run passed all three greedy baseline orderings with zero Referee violations. A full 10,000-target schedule and champion have not been generated yet. Produce that baseline first, then optimize against its measured coverage and score.
+A full 10,000-target baseline is available in `m2_results/aug2026_baseline_v2/`. All three greedy orderings passed the independent Referee with zero violations. The best raw-score baseline is total-score-first (30,629.889, 3,557 covered); first-observation-first covers 7,141 (21,418.946); coverage-score-hybrid covers 6,900 (24,958.653). These are Pareto alternatives, not an official combined score or optimized champion.

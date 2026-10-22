@@ -51,7 +51,8 @@ artifacts/
 *.tar.gz
 *.zip.sha256
 
-# M2 generated schedules, checkpoints, detailed traces, and solver outputs
+# M2 optimization schedules/checkpoints stay local unless selected for review.
+# The three refereed full baseline seed schedules in aug2026_baseline_v2 are intentionally tracked.
 m2_local_search_results/
 m2_math_opt_results/
 m2_max_coverage_score_results/
@@ -97,3 +98,5 @@ local_archive/
 m2_results/aug2026_smoke_*/
 m2_results/aug2026_baselines/
 m2_results/aug2026_optimizer_runs/
+m2_results/aug2026_baseline_rerun*/
+m2_results/aug2026_mathopt*/

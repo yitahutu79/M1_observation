@@ -17,7 +17,7 @@ The active planning horizon is 2026-08-01 through 2026-08-07 UTC. This index con
 - `m2/M2_MATH_MODULE_AUDIT.md`: source map for reusable mathematical optimization code.
 - `m2/M2_MATH_OPTIMIZATION_HANDOFF.md`: setup and steps for a team optimization experiment.
 
-A full August schedule/champion does not yet exist; the 10-target smoke output is not a full-scale baseline.
+The full August 10,000-target baseline is available in `m2_results/aug2026_baseline_v2/`; its three schedules passed the independent Referee. Champion optimization remains the next step.
 
 ## FAMOU
 

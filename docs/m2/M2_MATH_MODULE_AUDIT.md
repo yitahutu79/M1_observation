@@ -13,8 +13,8 @@ This page describes reusable code and current entrypoints. It makes no performan
 
 The optimizer modules are reusable components, not standalone input sources. Candidate windows and score rules come from the active D configuration and a current refereed seed.
 
-## Before optimization
+## Optimization starting point
 
-Only a 10-target August smoke result exists. Generate and referee a full baseline before full-scale optimization. See `M2_MATH_OPTIMIZATION_HANDOFF.md` for commands and required evidence.
+The three full 10,000-target August baseline schedules are in `m2_results/aug2026_baseline_v2/targets_10000/`; each passed the independent Referee with zero violations. Use them as Pareto starting points and preserve their SHA-256 values. See `M2_MATH_OPTIMIZATION_HANDOFF.md` for commands and required evidence.
 
 MILP optimality applies only to the finite candidate subproblem in a selected neighborhood. It does not prove a global optimum for the continuous-time schedule.

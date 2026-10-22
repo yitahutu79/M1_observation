@@ -31,6 +31,7 @@ class Rules:
     duration_score_rule: str
     repeat_observation_rule: str
     numeric_tolerance_s: float
+    d_window_boundary_guard_s: float = 0.001
 
 
 def load_rules(path: Path) -> Rules:
@@ -44,6 +45,7 @@ def load_rules(path: Path) -> Rules:
         duration_score_rule=raw["duration_score_rule"],
         repeat_observation_rule=raw["repeat_observation_rule"],
         numeric_tolerance_s=float(raw["numeric_tolerance_s"]),
+        d_window_boundary_guard_s=float(raw.get("d_window_boundary_guard_s", 0.001)),
     )
 
 
@@ -194,7 +196,8 @@ def iter_target_windows(cache: Path, priorities: dict[str, str], target_limit: i
                 raise ValueError(f"D row {line_number} is not labeled sunlit")
             if priority_filter and priority != priority_filter:
                 continue
-            start_s, end_s = float(row["start_s"]), float(row["end_s"])
+            source_start_s, source_end_s = float(row["start_s"]), float(row["end_s"])
+            start_s, end_s = source_start_s, source_end_s
             if not (math.isfinite(start_s) and math.isfinite(end_s) and 1 <= int(row["station_id"]) <= 10 and end_s > start_s):
                 raise ValueError(f"invalid D interval or station at row {line_number}")
             if end_s - start_s < 120.0 - 1e-9:
@@ -207,6 +210,8 @@ def iter_target_windows(cache: Path, priorities: dict[str, str], target_limit: i
                 "station_id": int(row["station_id"]),
                 "window_start_s": start_s,
                 "window_end_s": end_s,
+                "source_window_start_s": source_start_s,
+                "source_window_end_s": source_end_s,
                 "priority": priority,
             })
     if current_index is not None and group:
@@ -231,7 +236,7 @@ def audit_candidate_rows(cache: Path, priorities: dict[str, str], target_limit: 
             target_ids.add(canonical)
             mismatch += row["priority"] != priority
     return {"candidate_windows_ge_120": count, "candidate_targets": len(target_ids),
-            "d_priority_mismatch_rows": mismatch}
+            "d_priority_annotation_mismatch_rows": mismatch}
 
 
 def _transition(left_target: str | None, right_target: str, rules: Rules) -> float:
@@ -265,9 +270,14 @@ def choose_observation(windows: list[dict], calendars: dict[int, list[dict]], ea
                        rules: Rules, preference: str):
     choices = []
     for window in windows:
-        if window["window_end_s"] < earliest + rules.minimum_observation_s - rules.numeric_tolerance_s:
+        placement_window = dict(window)
+        placement_window["window_start_s"] += rules.d_window_boundary_guard_s
+        placement_window["window_end_s"] -= rules.d_window_boundary_guard_s
+        if placement_window["window_end_s"] < earliest + rules.minimum_observation_s - rules.numeric_tolerance_s:
             continue
-        found = find_station_slot(calendars[window["station_id"]], window, earliest, rules)
+        if placement_window["window_end_s"] <= placement_window["window_start_s"]:
+            continue
+        found = find_station_slot(calendars[window["station_id"]], placement_window, earliest, rules)
         if found is None:
             continue
         position, start_s, latest_end = found
@@ -275,12 +285,12 @@ def choose_observation(windows: list[dict], calendars: dict[int, list[dict]], ea
         if duration < rules.minimum_observation_s - rules.numeric_tolerance_s:
             continue
         if preference == "earliest":
-            key = (start_s, -duration, window["station_id"], window["source_line"])
+            key = (start_s, -duration, placement_window["station_id"], placement_window["source_line"])
         elif preference == "score":
-            key = (-duration, start_s, window["station_id"], window["source_line"])
+            key = (-duration, start_s, placement_window["station_id"], placement_window["source_line"])
         else:
             raise ValueError(f"unknown placement preference {preference}")
-        choices.append((key, window, position, start_s, duration))
+        choices.append((key, placement_window, position, start_s, duration))
     return min(choices, default=None, key=lambda item: item[0])
 
 
@@ -303,8 +313,8 @@ def insert_observation(windows: list[dict], calendars: dict[int, list[dict]], ta
         "priority": window["priority"], "score": observation_score(window["priority"], duration, rules),
         "visit_number": len(target_tasks[target]) + 1,
         "source_d_line": window["source_line"],
-        "source_window_start_s": window["window_start_s"],
-        "source_window_end_s": window["window_end_s"],
+        "source_window_start_s": window.get("source_window_start_s", window["window_start_s"]),
+        "source_window_end_s": window.get("source_window_end_s", window["window_end_s"]),
     }
     calendars[window["station_id"]].insert(position, task)
     target_tasks[target].append(task)

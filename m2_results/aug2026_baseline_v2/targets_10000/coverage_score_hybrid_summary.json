@@ -1,0 +1,139 @@
+{
+  "target_limit": 10000,
+  "algorithm": "coverage_score_hybrid",
+  "candidate_audit": {
+    "candidate_windows_ge_120": 540238,
+    "candidate_targets": 9999,
+    "d_priority_annotation_mismatch_rows": 64708,
+    "elapsed_s": 2.459797458956018
+  },
+  "scheduler": {
+    "scheduling_elapsed_s": 26.425344625022262,
+    "phase_task_counts": {
+      "first_high": 2023,
+      "first_medium": 3597,
+      "first_low": 1280,
+      "repeats_high": 371,
+      "repeats_medium": 196,
+      "repeats_low": 0
+    },
+    "formal_status_counts": {
+      "has_windows": 9999,
+      "partial_sampled_propagation_failure": 1
+    }
+  },
+  "referee_elapsed_s": 31.20799729193095,
+  "total_algorithm_elapsed_s": 58.10671783296857,
+  "referee": {
+    "legal": true,
+    "violation_count": 0,
+    "violation_categories": {},
+    "task_count": 7467,
+    "unique_covered_targets": 6900,
+    "target_limit": 10000,
+    "coverage_rate": 0.69,
+    "total_score": 24958.652804481142,
+    "repeated_observation_count": 567,
+    "observations_per_target_distribution": {
+      "1": 6425,
+      "2": 383,
+      "3": 92
+    },
+    "minimum_revisit_gap_s": 172799.99999999997,
+    "priority_metrics": {
+      "high": {
+        "target_count": 2024,
+        "covered_targets": 2023,
+        "coverage_rate": 0.9995059288537549,
+        "observation_count": 2394,
+        "score": 11859.460281427993
+      },
+      "medium": {
+        "target_count": 3990,
+        "covered_targets": 3597,
+        "coverage_rate": 0.9015037593984963,
+        "observation_count": 3793,
+        "score": 10786.092636306405
+      },
+      "low": {
+        "target_count": 3986,
+        "covered_targets": 1280,
+        "coverage_rate": 0.32112393376818865,
+        "observation_count": 1280,
+        "score": 2313.099886746743
+      }
+    },
+    "scheduled_seconds": 1689121.8635283313,
+    "overall_station_utilization": 0.3258336928102491,
+    "station_metrics": {
+      "1": {
+        "task_count": 770,
+        "scheduled_seconds": 169533.64920133507,
+        "planning_horizon_utilization": 0.3270325023173902
+      },
+      "2": {
+        "task_count": 844,
+        "scheduled_seconds": 192329.60091539213,
+        "planning_horizon_utilization": 0.3710061746053089
+      },
+      "3": {
+        "task_count": 911,
+        "scheduled_seconds": 210823.74010738777,
+        "planning_horizon_utilization": 0.40668159742937454
+      },
+      "4": {
+        "task_count": 474,
+        "scheduled_seconds": 106756.0640485906,
+        "planning_horizon_utilization": 0.20593376552583065
+      },
+      "5": {
+        "task_count": 663,
+        "scheduled_seconds": 148042.39459842688,
+        "planning_horizon_utilization": 0.2855756068642494
+      },
+      "6": {
+        "task_count": 743,
+        "scheduled_seconds": 163872.00021426956,
+        "planning_horizon_utilization": 0.3161111115244397
+      },
+      "7": {
+        "task_count": 868,
+        "scheduled_seconds": 201624.61977510675,
+        "planning_horizon_utilization": 0.38893638073901765
+      },
+      "8": {
+        "task_count": 1078,
+        "scheduled_seconds": 242726.8949394367,
+        "planning_horizon_utilization": 0.46822317696650595
+      },
+      "9": {
+        "task_count": 555,
+        "scheduled_seconds": 125403.32590663458,
+        "planning_horizon_utilization": 0.24190456386310683
+      },
+      "10": {
+        "task_count": 561,
+        "scheduled_seconds": 128009.57382175115,
+        "planning_horizon_utilization": 0.2469320482672669
+      }
+    },
+    "formal_status_counts": {
+      "has_windows": 9999,
+      "partial_sampled_propagation_failure": 1
+    },
+    "validation_scope": "every task checked against its exact D row and D-to-C provenance; direct Skyfield satellite illumination sampled on a fixed grid; not a continuous-time proof",
+    "candidate_layer": "D_illumination_refined_v2",
+    "d_windows_sha256": "002b2db8927a035822bb58067e76faa67f5b3746c95d64bdcd4f18335e7de165",
+    "d_manifest_sha256": "7a441bc6e1a2a68078d7abf4acbe0ca4f3624f857e40a83e417e8e51f871046a",
+    "skyfield_sunlight_sample_step_s": 1.0,
+    "d_priority_annotation_mismatches": 701
+  },
+  "experimental": {
+    "label": "EXPERIMENTAL_NOT_OFFICIAL",
+    "coverage_normalized": 0.69,
+    "score_normalized": 0.2767464218889977,
+    "theoretical_score_upper_bound": 90186.0,
+    "composite": 0.4833732109444988
+  },
+  "generated_utc": "2026-10-22T06:03:43.790619+00:00"
+}

@@ -1,0 +1,4 @@
+target_limit,algorithm,unique_covered_targets,coverage_rate,total_score,task_count,repeated_observation_count,experimental_composite
+10000,first_observation_first,7141,0.7141,21418.94648995086,8042,901,0.4757987331179499
+10000,total_score_first,3557,0.3557,30629.888505120467,7609,4052,0.34766509605216145
+10000,coverage_score_hybrid,6900,0.69,24958.652804481142,7467,567,0.4833732109444988

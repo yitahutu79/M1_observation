@@ -45,6 +45,16 @@ class M2ConfirmedRuleTests(unittest.TestCase):
         self.assertEqual(second["station_id"], 2)
         self.assertGreaterEqual(second["start_s"] - first["end_s"], 172800.0)
 
+    def test_scheduler_places_tasks_inside_d_boundaries_by_guard(self):
+        window = [{"source_line": 2, "target_id": "00001", "canonical_target_id": "1", "target_index": 0,
+                   "station_id": 1, "window_start_s": 10.0, "window_end_s": 500.0, "priority": "high"}]
+        calendars = {station: [] for station in range(1, 11)}
+        targets = defaultdict(list)
+        task = insert_observation(window, calendars, targets, self.rules, "test", "earliest")
+        self.assertAlmostEqual(task["start_s"], 10.001, places=9)
+        self.assertGreater(task["start_s"], 10.0)
+        self.assertLess(task["end_s"], 500.0)
+
     def fixture(self, root: Path):
         base = root / "formal_20260801_candidate"
         cache = base / "D_illumination_refined_v2"
@@ -200,6 +210,30 @@ class M2ConfirmedRuleTests(unittest.TestCase):
                 skyfield_load.return_value = {"earth":object(), "sun":object()}
                 result = referee(path, cache, priority, config, 2)
             self.assertIn("satellite_umbra", result["violation_categories"])
+
+    def test_referee_uses_official_priority_and_reports_d_label_mismatch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); cache, priority, config = self.fixture(root)
+            d_path = cache / "windows.csv"
+            with d_path.open(encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle)); fields = list(rows[0])
+            rows[0]["priority"] = "unassigned"
+            with d_path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
+                writer.writeheader(); writer.writerows(rows)
+            d_manifest_path = cache / "manifest.json"
+            d_manifest = json.loads(d_manifest_path.read_text(encoding="utf-8"))
+            d_manifest["windows_sha256"] = hashlib.sha256(d_path.read_bytes()).hexdigest()
+            d_manifest_path.write_text(json.dumps(d_manifest), encoding="utf-8")
+            config_data = json.loads(config.read_text(encoding="utf-8"))
+            config_data["candidate_windows_sha256"] = d_manifest["windows_sha256"]
+            config_data["candidate_manifest_sha256"] = hashlib.sha256(d_manifest_path.read_bytes()).hexdigest()
+            config.write_text(json.dumps(config_data), encoding="utf-8")
+            path = root / "schedule.csv"; write_schedule(path, [self.row()])
+            result = self.referee_mocked(path, cache, priority, config, 2)
+            self.assertTrue(result["legal"], result["violation_categories"])
+            self.assertEqual(result["d_priority_annotation_mismatches"], 1)
+            self.assertAlmostEqual(result["total_score"], 3.0)
 
 
 if __name__ == "__main__":

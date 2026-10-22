@@ -4,13 +4,15 @@ This repository contains the current M1 window pipeline and M2 static scheduler 
 
 ## Current handoff state
 
-- M1 A/B/C and the refined D illumination layer are available under `m1_validation/formal_20260801_candidate/`.
+- The active M1 cache is the August 1–7 UTC candidate under `m1_validation/formal_20260801_candidate/`; its large data files are local-only and excluded from ordinary Git.
 - M2 scheduler and independent Referee accept only the SHA-256-pinned `D_illumination_refined_v2` layer. They fail closed on path, manifest, time-range, or hash mismatch.
-- A 10-target D-based smoke baseline passed. A full 10,000-target M2 baseline and August champion have **not** been generated yet. Generate and referee that baseline before comparing optimizers.
+- The full 10,000-target August M2 baseline is complete and independently refereed. Results and schedules are in `m2_results/aug2026_baseline_v2/`; use them as the seed set for the next mathematical-optimization work.
+- Baseline summary: first-observation coverage 7,141 / score 21,418.946; total-score-first coverage 3,557 / score 30,629.889; coverage-score-hybrid coverage 6,900 / score 24,958.653. All three have zero Referee violations.
+- M2 scheduling keeps a 1 ms inward margin at each D-window boundary. Official priority data drives independent scoring; D's copied priority label mismatches are recorded diagnostically.
 - D checks use adaptive refinement and independent sampled validation; they are not a proof of continuous-time completeness.
 - The official normalization formula for the 50% coverage and 50% score components remains unspecified. Report raw coverage and raw score separately.
 
-Start with [`RUNBOOK.md`](RUNBOOK.md), [`docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md`](docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md), and [`docs/m2/M2_D_LAYER_STATUS.md`](docs/m2/M2_D_LAYER_STATUS.md).
+Start with [`RUNBOOK.md`](RUNBOOK.md), [`m2_results/aug2026_baseline_v2/M2_FULL_RESULTS.md`](m2_results/aug2026_baseline_v2/M2_FULL_RESULTS.md), and [`docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md`](docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md).
 
 ## Repository layout
 

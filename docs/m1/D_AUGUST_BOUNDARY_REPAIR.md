@@ -2,7 +2,7 @@
 
 ## Decision
 
-Use `m1_validation/formal_20260801_candidate/D_illumination_refined_v2/` as the current August D candidate. Preserve the earlier `D_illumination/` and `D_illumination_refined/` directories as audit history. The repair fixed confirmed sub-second omissions caused by the original classifier conservatively discarding ambiguous leaves at its 1 ms limit. A 10-target M2 smoke schedule has been generated and accepted by the D-aware independent Referee; no full M2 baseline or champion has been generated.
+Use `m1_validation/formal_20260801_candidate/D_illumination_refined_v2/` as the current August D candidate. The older initial and intermediate D window tables were removed during the October handoff cleanup; this report preserves the audit summary and defect rationale. The repair fixed confirmed sub-second omissions caused by the original classifier conservatively discarding ambiguous leaves at its 1 ms limit. A full 10,000-target M2 baseline now exists and is independently refereed in `m2_results/aug2026_baseline_v2/`.
 
 ## What changed
 

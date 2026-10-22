@@ -28,4 +28,4 @@ D v2 has 622,882 rows, including 540,238 windows of at least 120 seconds. A full
 
 ## Current decision
 
-D v2 is the only configured August M2 candidate, with its window and manifest SHA-256 pinned in `m2_config.json`. The M2 scheduler and independent Referee now fail closed on a different layer, cache path, hash, planning range, time scale, source-C provenance, TLE, or ephemeris. A 10-target smoke run passed all three greedy baselines with zero Referee violations. No full August M2 baseline or champion exists yet. The 1 ms local scan and sample limits remain; this is not a continuous-time completeness proof.
+D v2 is the only configured August M2 candidate, with its window and manifest SHA-256 pinned in `m2_config.json`. The M2 scheduler and independent Referee fail closed on a different layer, cache path, hash, planning range, time scale, source-C provenance, TLE, or ephemeris. The full 10,000-target baseline is now available in `m2_results/aug2026_baseline_v2/`; all three schedules passed the Referee. This is not a continuous-time completeness proof.

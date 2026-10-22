@@ -17,15 +17,17 @@ The planning interval is 2026-08-01 00:00 UTC through 2026-08-07 00:00 UTC. Exis
 
 If M1 recomputation is explicitly needed, use `formal_recompute_aug2026.py`; this requires authorized TLE, station, priority, and DE421 inputs.
 
-## M2 baseline and Referee
+## Current M2 baseline and Referee
 
-The scheduler reads the configured D layer only. The independent Referee checks schedule constraints, D row citations, C provenance, and sampled satellite illumination.
+The scheduler reads the configured D layer only. The independent Referee checks schedule constraints, D row citations, C provenance, and sampled satellite illumination. The current 10,000-target baseline is already complete in `m2_results/aug2026_baseline_v2/`; all three schedules passed with zero violations.
+
+To reproduce the full baseline in a new directory:
 
 ```bash
-python run_m2_baselines.py --sizes 10000 --out m2_results/aug2026_baseline
+python run_m2_baselines.py --sizes 10000 --out m2_results/aug2026_baseline_rerun
 ```
 
-Review the output schedule and Referee report, then use the refereed schedule as the optimizer input. The full baseline is not yet present; the existing 10-target smoke result is an integration check only.
+Use the saved schedules in `m2_results/aug2026_baseline_v2/targets_10000/` as optimizer starting points. The D cache must be obtained through the authorized team channel and pass the hash checks in `m2_config.json`.
 
 ## Mathematical optimization
 

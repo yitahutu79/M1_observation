@@ -13,4 +13,4 @@ The repository remote is `https://github.com/yitahutu79/M1_observation.git`. Che
 - Full schedules, optimizer checkpoints, solver traces, temporary databases, virtual environments, and generated run directories.
 - Credentials, tokens, personal absolute paths, and local-only delivery archives.
 
-The active D windows and manifest identities are recorded in `m2_config.json` and `docs/m2/M2_D_LAYER_STATUS.md`. The current M2 full-scale baseline has not yet been generated.
+The active D windows and manifest identities are recorded in `m2_config.json` and `docs/m2/M2_D_LAYER_STATUS.md`. The full August M2 baseline and its three refereed schedules are in `m2_results/aug2026_baseline_v2/`; complete M1 caches remain outside ordinary Git.
