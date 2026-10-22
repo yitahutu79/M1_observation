@@ -17,6 +17,8 @@ The planning interval is 2026-08-01 00:00 UTC through 2026-08-07 00:00 UTC. Exis
 
 If M1 recomputation is explicitly needed, use `formal_recompute_aug2026.py`; this requires authorized TLE, station, priority, and DE421 inputs.
 
+Layer definitions: A is geometric visibility at station elevation 10°–85°; B is station night at solar altitude below −6°; C is their same-target/same-station intersection; D further restricts C to intervals when the satellite is sunlit. M2 uses only D. The full cache is local-only and must be obtained separately; no shared download URL is configured. See the root README for layer counts and data locations.
+
 ## Current M2 baseline and Referee
 
 The scheduler reads the configured D layer only. The independent Referee checks schedule constraints, D row citations, C provenance, and sampled satellite illumination. The current 10,000-target baseline is already complete in `m2_results/aug2026_baseline_v2/`; all three schedules passed with zero violations.
@@ -28,6 +30,18 @@ python run_m2_baselines.py --sizes 10000 --out m2_results/aug2026_baseline_rerun
 ```
 
 Use the saved schedules in `m2_results/aug2026_baseline_v2/targets_10000/` as optimizer starting points. The D cache must be obtained through the authorized team channel and pass the hash checks in `m2_config.json`.
+
+The baseline command reruns all three greedy orderings; it is not an optimizer command. For a reproducible optimizer run from a specific baseline seed, see `docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md`.
+
+To independently recheck a saved schedule after the cache and priority/ephemeris inputs are installed:
+
+```bash
+python m2_referee.py \\
+  --schedule m2_results/aug2026_baseline_v2/targets_10000/first_observation_first_schedule.csv \\
+  --target-limit 10000 \\
+  --violations /tmp/first_observation_first_violations.csv \\
+  --summary /tmp/first_observation_first_referee.json
+```
 
 ## Mathematical optimization
 

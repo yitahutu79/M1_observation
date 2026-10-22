@@ -10,7 +10,7 @@ The active planning horizon is 2026-08-01 through 2026-08-07 UTC. This index con
 
 ## M2
 
-- `m2/M2_D_LAYER_STATUS.md`: D-only input contract and smoke-test status.
+- `m2/M2_D_LAYER_STATUS.md`: D-only input contract and full baseline status.
 - `m2/M2_RULES_CONFIRMED.md`: legality and scoring rules.
 - `m2/M2_REVISED_BASELINES.md`: baseline definitions.
 - `m2/M2_OPTIMIZER_INTERFACE.md`: optimizer modes, interface, and acceptance gate.

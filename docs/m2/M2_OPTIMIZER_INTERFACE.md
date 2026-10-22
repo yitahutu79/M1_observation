@@ -6,8 +6,7 @@
 
 ## Current input
 
-The default input is the satellite-illumination D-layer candidate configured in `m2_config.json`.
-A new D-layer baseline schedule must be generated and accepted by the independent Referee before optimization. The optimizer uses that seed’s measured coverage as its hard coverage floor; it uses the measured coverage of the supplied schedule.
+The input is one of the refereed August baseline schedules in `m2_results/aug2026_baseline_v2/targets_10000/` (or another schedule that passes the Referee) plus the configured satellite-illumination D cache. The optimizer uses the supplied seed's measured coverage as its hard coverage floor and uses the measured coverage of the supplied schedule.
 
 ## Python interface
 
@@ -16,11 +15,11 @@ from pathlib import Path
 from m2_optimizer_interface import OptimizationRequest, optimize_schedule
 
 request = OptimizationRequest(
-    schedule_path=Path("path/to/d_layer_baseline_schedule.csv"),
+    schedule_path=Path("m2_results/aug2026_baseline_v2/targets_10000/first_observation_first_schedule.csv"),
     mode="hybrid",                 # fast_local | milp_rebuild | hybrid
     budget_s=300.0,
     seed=20261017,
-    output_dir=Path("m2_results/d_layer_runs/my_run"),
+    output_dir=Path("m2_results/aug2026_optimizer_runs/my_run"),
     run_name="hybrid_trial",
     stagnation_s=12.0,
     local_milp_limit_s=5.0,
@@ -44,32 +43,32 @@ result = optimize_schedule(request)
 ```bash
 .venv/bin/python run_m2_optimizer.py \
   --mode fast_local \
-  --schedule path/to/d_layer_baseline_schedule.csv \
+  --schedule m2_results/aug2026_baseline_v2/targets_10000/first_observation_first_schedule.csv \
   --budget 300 \
   --seed 20261017 \
-  --output-dir m2_results/d_layer_runs/manual_fast
+  --output-dir m2_results/aug2026_optimizer_runs/manual_fast
 
 .venv/bin/python run_m2_optimizer.py \
   --mode milp_rebuild \
-  --schedule path/to/d_layer_baseline_schedule.csv \
+  --schedule m2_results/aug2026_baseline_v2/targets_10000/first_observation_first_schedule.csv \
   --budget 300 \
   --seed 20261017 \
-  --output-dir m2_results/d_layer_runs/manual_milp
+  --output-dir m2_results/aug2026_optimizer_runs/manual_milp
 
 .venv/bin/python run_m2_optimizer.py \
   --mode hybrid \
-  --schedule path/to/d_layer_baseline_schedule.csv \
+  --schedule m2_results/aug2026_baseline_v2/targets_10000/first_observation_first_schedule.csv \
   --budget 300 \
   --seed 20261017 \
   --stagnation-seconds 12 \
-  --output-dir m2_results/d_layer_runs/manual_hybrid
+  --output-dir m2_results/aug2026_optimizer_runs/manual_hybrid
 ```
 
 Reproduce the controlled comparison with:
 
 ```bash
 .venv/bin/python run_m2_optimizer_comparison.py \
-  --schedule path/to/d_layer_baseline_schedule.csv \
+  --schedule m2_results/aug2026_baseline_v2/targets_10000/first_observation_first_schedule.csv \
   --budget 300 \
   --seed 20261017 \
   --stagnation-seconds 12
@@ -95,7 +94,7 @@ Starts with fast local search. When no accepted score gain occurs for `stagnatio
 
 A candidate becomes a returned best only when all conditions hold:
 
-1. unique coverage does not decrease from the D-layer baseline;
+1. unique coverage does not decrease from the supplied seed schedule;
 2. score does not decrease from the input schedule;
 3. the independent `m2_referee.py` reports zero violations;
 4. cited windows belong to the configured D-layer candidate cache and satisfy the official duration, station conflict, switch, cooldown and scoring rules.
