@@ -58,17 +58,20 @@ python -m unittest -v test_code_fixes test_m2 test_m2_math_opt test_m2_optimizer
 
 ## Restricted inputs and cache
 
-The repository currently contains `data/轨道.txt` (TLEs) and `data/站点.txt` (station definitions). The priority archive `data/优先级.zip`, DE421 ephemeris `data/ephemeris/de421.bsp`, and full M1 cache are not in ordinary Git. The cache is expected locally at `m1_validation/formal_20260801_candidate/` and includes A/B/C plus `D_illumination_refined_v2/`; it is about 1 GB. No shared-storage download URL is configured in this repository, so obtain the missing priority/ephemeris/cache files through the team's authorized channel.
+The complete August 2026 reproduction bundle is published at [`releases/aug2026/`](releases/aug2026/). It contains canonical A/B/C/D windows, target status, TLEs, station definitions (`data/站址.txt`), priority archive, DE421 ephemeris, the pinned source snapshot, and frozen baseline results. The 148 MiB archive is tracked with Git LFS; see its README for download and checksum steps. The archive supports rerunning M2 and the independent Referee against the supplied D cache; it does not contain A batch shards for a fresh full M1 rebuild.
 
-Before running, verify the D windows and manifest SHA-256 values against `m2_config.json`. A plain `git clone` is not sufficient to run M2 until those files are supplied. Once supplied, set up and reproduce with:
+Before running, download and extract the bundle, then follow its `REPRODUCE.md`:
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -r requirements-validation.txt
-python -m unittest -v test_code_fixes test_m2 test_m2_math_opt test_m2_optimizer_interface test_visibility.SyntheticTests
-python run_m2_baselines.py --sizes 10000 --out m2_results/aug2026_baseline_rerun
+git lfs install
+git lfs pull --include="releases/aug2026/M1_M2_AUG2026_REPRO_BUNDLE.tar.gz"
+shasum -a 256 -c releases/aug2026/BUNDLE_SHA256.txt
+mkdir -p /tmp/m1_m2_aug2026
+tar -xzf releases/aug2026/M1_M2_AUG2026_REPRO_BUNDLE.tar.gz -C /tmp/m1_m2_aug2026
+cd /tmp/m1_m2_aug2026/m1_m2_repro_aug2026_stage
 ```
+
+The bundle's `REPRODUCE.md` has the environment setup, all-file checksum verification, tests, baseline command, and Referee command.
 
 The already measured seed schedules are committed under `m2_results/aug2026_baseline_v2/targets_10000/`; do not overwrite them. See [`RUNBOOK.md`](RUNBOOK.md) for independent Referee commands and [`docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md`](docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md) for optimizer commands.
 

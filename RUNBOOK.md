@@ -17,7 +17,7 @@ The planning interval is 2026-08-01 00:00 UTC through 2026-08-07 00:00 UTC. Exis
 
 If M1 recomputation is explicitly needed, use `formal_recompute_aug2026.py`; this requires authorized TLE, station, priority, and DE421 inputs.
 
-Layer definitions: A is geometric visibility at station elevation 10°–85°; B is station night at solar altitude below −6°; C is their same-target/same-station intersection; D further restricts C to intervals when the satellite is sunlit. M2 uses only D. The full cache is local-only and must be obtained separately; no shared download URL is configured. See the root README for layer counts and data locations.
+Layer definitions: A is geometric visibility at station elevation 10°–85°; B is station night at solar altitude below −6°; C is their same-target/same-station intersection; D further restricts C to intervals when the satellite is sunlit. M2 uses only D. The complete cache and runtime inputs are in the Git LFS reproduction bundle at [`releases/aug2026/`](releases/aug2026/). Follow that README to fetch and verify it. The bundle supports M2 baseline replay and Referee validation, but omits A batch shards for a fresh full M1 rebuild. See the root README for layer counts and definitions.
 
 ## Current M2 baseline and Referee
 
