@@ -8,7 +8,7 @@ class FormalCacheTests(unittest.TestCase):
         self.assertEqual(len(p),10000);self.assertEqual({p.values().__iter__().__next__()}|set(p.values()),{'high','medium','low'})
     def test_manifest_hit_and_invalidation(self):
         class A: pass
-        a=A();a.start='2026-10-01T00:00:00Z';a.end='2026-10-07T00:00:00Z';a.time_scale='UTC';a.step=60; a.tle='data/轨道.txt';a.stations='data/站址.txt';a.targets=1
+        a=A();a.start='2026-08-01T00:00:00Z';a.end='2026-08-07T00:00:00Z';a.time_scale='UTC';a.step=60; a.tle='data/轨道.txt';a.stations='data/站址.txt';a.targets=1
         with tempfile.TemporaryDirectory() as q:
             q=Path(q);(q/'windows.csv').write_text('header\n');m=manifest('X',a,['data/轨道.txt']);(q/'manifest.json').write_text(json.dumps(m));self.assertTrue(cache_ok(q,m));a.step=30;m2=manifest('X',a,['data/轨道.txt']);self.assertFalse(cache_ok(q,m2))
     def test_atomic_outputs_are_regular_files(self):

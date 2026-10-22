@@ -20,11 +20,6 @@ m1_validation/final/scale_*/anomalies.jsonl
 m1_validation/final/standalone_smoke_*
 
 # Formal M1 caches are delivered out-of-band and verified by SHA-256.
-m1_validation/formal_20261001/
-m1_validation/formal_20261001_v2/
-m1_validation/formal_20261001_illumination/
-m1_validation/formal_20261001_illumination_100/
-m1_validation/formal_20261001_illumination_smoke/
 m1_validation/formal_20260801_candidate/
 
 # Local regression, profiling, and prototype outputs.

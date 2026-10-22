@@ -1,82 +1,32 @@
-# Reproduction and Review Runbook
+# Reproduction and Team Runbook
 
-## Environment
+## Environment and quick tests
 
 ```bash
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install --upgrade pip
 python -m pip install -r requirements-validation.txt
+python -m unittest -v test_code_fixes test_m2 test_m2_math_opt test_m2_optimizer_interface test_visibility.SyntheticTests
 ```
 
-Validated local versions were Python 3.13.12, NumPy 2.5.4, SciPy 1.18.1, Skyfield 1.55, sgp4 2.27, and Matplotlib 3.11.2. Compatible version ranges are recorded in the requirement files.
+These tests are small and do not run the full M1 rebuild or a long optimization.
 
-## Fast checks
+## Active M1 cache
+
+The planning interval is 2026-08-01 00:00 UTC through 2026-08-07 00:00 UTC. Existing A/B/C and refined D v2 caches are under `m1_validation/formal_20260801_candidate/`. The D windows SHA-256 is `002b2db8927a035822bb58067e76faa67f5b3746c95d64bdcd4f18335e7de165`; its manifest SHA-256 is `7a441bc6e1a2a68078d7abf4acbe0ca4f3624f857e40a83e417e8e51f871046a`. Do not overwrite or regenerate this accepted candidate during M2 optimization.
+
+If M1 recomputation is explicitly needed, use `formal_recompute_aug2026.py`; this requires authorized TLE, station, priority, and DE421 inputs.
+
+## M2 baseline and Referee
+
+The scheduler reads the configured D layer only. The independent Referee checks schedule constraints, D row citations, C provenance, and sampled satellite illumination.
 
 ```bash
-python -m unittest -v \
-  test_code_fixes \
-  test_m2 \
-  test_m2_math_opt \
-  test_m2_optimizer_interface \
-  test_visibility.SyntheticTests
+python run_m2_baselines.py --sizes 10000 --out m2_results/aug2026_baseline
 ```
 
-These tests do not run a full 10,000-target M1 recomputation or a long optimizer experiment. They also do not require the restricted TLE, station, priority, or ephemeris files. Run `python -m unittest discover -v` only after restoring those authorized inputs.
+Review the output schedule and Referee report, then use the refereed schedule as the optimizer input. The full baseline is not yet present; the existing 10-target smoke result is an integration check only.
 
-## Current M1 rebuild
+## Mathematical optimization
 
-The current planning interval is 2026-08-01 00:00 UTC through 2026-08-07 00:00 UTC. The October cache and all schedules derived from it are historical only. The resumable rebuild writes to `m1_validation/formal_20260801_candidate/`.
-
-```bash
-python formal_recompute_aug2026.py
-```
-
-It verifies configuration fingerprints and per-batch hashes before resuming. Required inputs are the original TLE, station coordinates, priority archive, and DE421 ephemeris; their distribution channel must be authorized separately. A/B/C and refined D v2 are complete. Use `m1_validation/formal_20260801_candidate/D_illumination_refined_v2/` as the only M2 candidate input. Its structural audit and fixed-seed independent sample are recorded in `docs/m1/D_AUGUST_BOUNDARY_REPAIR.md`.
-
-## M2 D-layer baseline and Referee
-
-The active config pins the refined-D windows and manifest SHA-256. The scheduler and independent Referee fail closed on any path/hash/time-scale mismatch and never fall back to C. The Referee also checks D-to-C provenance and independently samples satellite illumination at one-second intervals throughout each task. This sampled check is not a continuous-time completeness proof.
-
-```bash
-python m2_referee.py \
-  --schedule path/to/schedule.csv \
-  --cache m1_validation/formal_20260801_candidate/D_illumination_refined_v2 \
-  --priority data/优先级.zip \
-  --config m2_config.json \
-  --target-limit 10000 \
-  --violations path/to/violations.csv \
-  --summary path/to/referee_summary.json
-```
-
-For the first small baseline check:
-
-```bash
-python run_m2_baselines.py --sizes 10 --out m2_results/aug2026_smoke
-```
-
-Review the Referee summaries and D input hashes before increasing the target count. Current M2 outputs must use August-specific paths and must not reuse October schedules.
-
-## Optional optimizer on a D-validated schedule
-
-The unified optimizer accepts only a schedule that passes the D-aware Referee. It keeps the input schedule’s covered-target count as a hard constraint. No August champion exists yet.
-
-```bash
-python run_m2_optimizer.py \
-  --mode fast_local \
-  --schedule path/to/d_validated_schedule.csv \
-  --budget 300 \
-  --seed 20261019 \
-  --output-dir path/to/new_output
-```
-
-The output directory must be new. The optimizer refuses to overwrite an existing run. `milp_rebuild` and `hybrid` are optional modes; Fast Local is the default.
-
-## Champion identity
-
-No current champion exists for the Aug D-layer candidate yet. Do not use schedules under
-`local_archive/m2_results_legacy_v2/`; they use the old horizon and pre-corrected D logic. After a new D-based run, record the schedule hash, D-layer hash, coverage, score, seed, budget, and Referee report.
-
-## Expensive commands
-
-`formal_recompute_aug2026.py` performs the current full M1 computation. Full optimizer comparisons take minutes to hours. They are not routine pull-request checks. Use manifests, samples, unit tests, and the independent Referee for ordinary review.
+See [`docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md`](docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md). Every experiment must record seed, end-to-end budget, input/output hashes, raw coverage and score, and the independent Referee result. The official combined-score normalization has not been published, so do not report an experimental composite as an official score.

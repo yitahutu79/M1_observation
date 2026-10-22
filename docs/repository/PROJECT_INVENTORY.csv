@@ -1,15 +1,10 @@
-path,type,purpose,git_status,disposition
-README.md / RUNBOOK.md,files,project entry points,tracked,commit
-docs/,directory,"organized rules, M1, M2, team, FAMOU, and repository documentation",tracked,commit
-*.py at repository root,files,"stable executable modules, CLIs, and tests",mixed,keep paths stable; tracked core only
-m1_results/,directory,"compact M1 samples, manifests, hashes, and acceptance evidence",contains tracked files,selective commit
-m1_validation/formal_20260801_candidate/,directory,"current August A/B/C plus corrected D candidate in progress",ignored,do not share as accepted until D validation completes
-m1_validation/formal_20261001_v2/,directory,full October M1 v2 cache retained as historical,ignored,not a current planning input
-m2_results/,directory,"October champion metadata and historical schedule samples",contains tracked and ignored,"historical only; regenerate M2 after August D acceptance"
-m2_*_results/ and local_archive/m2_results/optimizer_runs/,directories,"detailed optimizer schedules, traces, and checkpoints",ignored,retain locally
-local_archive/team_cross_validation_20261019/,directory,cross-team source package and full audit workspace,ignored,authorized local only
-team_recovery_results*/,directories,"recovery runs, failures, SQLite indexes, and evidence",ignored,retain locally
-artifacts/,directory,offline FAMOU archives and delivery bundles,ignored,manual authorized delivery
-local_archive/,directory,superseded reports, scripts, and tables retained for traceability,ignored,local historical reference
-data/,directory,"TLE, station, priority, and ephemeris inputs",mixed/restricted,redistribution permission required
-.venv/ __pycache__/ .DS_Store,local files,environment and caches,ignored,exclude
+path,type,purpose,status,disposition
+README.md / RUNBOOK.md,files,current project entry and reproducible commands,tracked,keep
+M1/M2 Python modules,source,active August window pipeline and D-based scheduler/optimizers,tracked,keep
+test_*.py,tests,unit and synthetic regression checks,tracked,keep
+docs/m1 and docs/m2,directories,current D identity rules and optimization handoff,tracked,keep
+m1_validation/formal_20260801_candidate/,directory,active A/B/C and refined D local cache,ignored,required local M2 input; verify hashes
+data/,directory,TLE station priority and ephemeris inputs,mixed/restricted,keep local; redistribute only with authorization
+m2_results/aug2026_smoke_20261022_v2/,directory,10-target integration smoke evidence,ignored,keep as smoke only
+.venv/ __pycache__/,local,environment and Python cache,ignored,do not share
+full schedules checkpoints and solver traces,local,generated optimization evidence,ignored,store per experiment and share intentionally

@@ -1,4 +1,4 @@
-"""HISTORICAL October M2 neighborhood diagnosis; results are not an August baseline."""
+"""Reusable targeted-neighborhood and enhanced-candidate generation for M2."""
 from __future__ import annotations
 
 import argparse
@@ -169,9 +169,9 @@ def original_combo_audit(candidates,origins,adjustable,pairs):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Archived October experiment runner; unavailable for current August D results.")
+    parser = argparse.ArgumentParser(description="Standalone historical experiment runner disabled; use the unified D-validated optimizer.")
     parser.parse_args()
-    raise SystemExit('Archived October neighborhood report runner is disabled. Use a fresh August D-based schedule before local experiments.')
+    raise SystemExit('Standalone neighborhood report runner is disabled. Use the unified optimizer with a D-validated seed.')
 
 
 if __name__=="__main__":main()

@@ -1,12 +1,12 @@
 # August 2026 M1 rebuild status
 
-**Active planning horizon:** 2026-08-01 00:00:00 through 2026-08-07 00:00:00 UTC. The October cache and every October-derived M2 score are historical and are not valid current inputs.
+**Active planning horizon:** 2026-08-01 00:00:00 through 2026-08-07 00:00:00 UTC.
 
 ## A/B/C generation
 
 The new resumable candidate is at `m1_validation/formal_20260801_candidate/`.
 
-The input contains 10,000 unique TLEs; their epochs range from 2026-08-02 16:00:02 UTC through 2026-08-04 15:52:26 UTC, within the revised planning interval. Thus this run is not extrapolating these TLEs backward from October.
+The input contains 10,000 unique TLEs; their epochs range from 2026-08-02 16:00:02 UTC through 2026-08-04 15:52:26 UTC, within the revised planning interval.
 
 | Layer | Rows | Result |
 |---|---:|---|
@@ -28,4 +28,4 @@ D v2 has 622,882 rows, including 540,238 windows of at least 120 seconds. A full
 
 ## Current decision
 
-D v2 is the only configured August M2 candidate, with its window and manifest SHA-256 pinned in `m2_config.json`. The M2 scheduler and independent Referee now fail closed on a different layer, cache path, hash, planning range, time scale, source-C provenance, TLE, or ephemeris. A 10-target smoke run passed all three greedy baselines with zero Referee violations. No full August M2 baseline or champion exists yet. Do not use any October schedule or score. The 1 ms local scan and sample limits remain; this is not a continuous-time completeness proof.
+D v2 is the only configured August M2 candidate, with its window and manifest SHA-256 pinned in `m2_config.json`. The M2 scheduler and independent Referee now fail closed on a different layer, cache path, hash, planning range, time scale, source-C provenance, TLE, or ephemeris. A 10-target smoke run passed all three greedy baselines with zero Referee violations. No full August M2 baseline or champion exists yet. The 1 ms local scan and sample limits remain; this is not a continuous-time completeness proof.

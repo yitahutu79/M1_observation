@@ -1,4 +1,4 @@
-"""HISTORICAL October MILP-LNS; the 9,849-target constraint is not the August baseline."""
+"""Reusable MILP-LNS neighborhood components for D-based M2 optimization."""
 from __future__ import annotations
 
 import argparse
@@ -199,9 +199,9 @@ def run_traditional(index,rules,budget_s,seed,base_tasks,base_score,priorities,t
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Archived October experiment runner; unavailable for current August D results.")
+    parser = argparse.ArgumentParser(description="Standalone historical experiment runner disabled; use the unified D-validated optimizer.")
     parser.parse_args()
-    raise SystemExit('Archived October MILP-LNS result runner is disabled. The MILP-LNS helper remains available through the D-aware unified optimizer.')
+    raise SystemExit('Standalone MILP-LNS runner is disabled. Its helper remains available through the unified optimizer.')
 
 
 if __name__=="__main__":main()

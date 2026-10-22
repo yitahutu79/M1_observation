@@ -1,27 +1,19 @@
 # M2 Greedy Baselines
 
-These are the current baseline algorithm definitions for a static six-day plan using the configured D illumination windows. The scheduler constructs candidates; `m2_referee.py` independently reloads the cited D rows, verifies their C provenance, and checks satellite illumination. Any numeric results in older M2 result files were produced on the October C horizon and remain historical only.
+These baseline orderings use the configured D illumination windows over the static six-day UTC horizon. The scheduler constructs tasks; the independent Referee reloads cited D rows, checks C provenance, and samples satellite illumination.
 
-## 1. First-observation-first
+## First-observation-first
 
-Schedule one feasible observation for every target before considering any repeat. First visits use the earliest feasible placement. After the coverage pass, add repeats at the earliest legal time subject to the global 48-hour cooldown.
+Place first observations before considering repeats, preferring the earliest feasible task. Then insert repeats subject to the global 48-hour cooldown.
 
-## 2. Total-score-first
+## Total-score-first
 
-Process high-, medium-, then low-priority targets. For each target, add every feasible repeat before moving to the next priority class, preferring 240-second placements. This baseline can trade low-priority coverage for repeated high-priority score under congestion.
+Process targets by priority and seek feasible repeats, preferring longer durations where the schedule permits.
 
-## 3. Coverage-score hybrid
+## Coverage-score hybrid
 
-Run priority-aware first-visit passes for high, medium, and low targets, then priority-aware repeat passes. It protects coverage before repeats while using priority and maximum feasible duration to improve score.
+Complete priority-aware first-visit passes before priority-aware repeat passes.
 
-## Experimental composite
+## Score reporting
 
-For analysis only:
-
-```
-coverage_normalized = unique_covered_targets / input_target_count
-score_normalized = total_score / sum_over_targets(priority_weight * 3)
-experimental_composite = 0.5 * coverage_normalized + 0.5 * score_normalized
-```
-
-Three visits are a horizon-only upper bound: with a minimum 120-second visit and a 48-hour cooldown measured after each end, a fourth visit cannot start within six days. The denominator ignores visibility and station conflicts, so the composite is only a search diagnostic.
+Report unique-target coverage and raw observation score separately. The official normalization for combining the two 50% components has not been specified; any composite is exploratory only.

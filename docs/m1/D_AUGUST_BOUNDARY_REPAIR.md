@@ -34,4 +34,4 @@ The 1 ms local grid can still miss a sub-millisecond event, and the independent 
 
 ## M2 handoff
 
-The current M2 scheduler reads only the configured refined-D manifest and window file. The independent Referee checks the exact D citation, D-to-C provenance, and direct Skyfield finite-Sun illumination on a one-second grid across each task. It rejects input/cache hash mismatches and has no C fallback. The one-second task check is sampled, not a strict continuous-time proof. The 10-target smoke run passed; run the full baseline only after reviewing that output. Do not use any October schedule or score as an August baseline.
+The current M2 scheduler reads only the configured refined-D manifest and window file. The independent Referee checks the exact D citation, D-to-C provenance, and direct Skyfield finite-Sun illumination on a one-second grid across each task. It rejects input/cache hash mismatches and has no C fallback. The one-second task check is sampled, not a strict continuous-time proof. The 10-target smoke run passed; run the full baseline only after reviewing that output.

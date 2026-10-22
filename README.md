@@ -1,44 +1,37 @@
-# M1 Observation Planning and M2 Static Scheduling
+# Multi-Station Optical Observation Planning
 
-This private team repository contains the audited M1 and M2 implementation for the Baidu Famou Cup multi-station optical-observation planning task.
+This repository contains the current M1 window pipeline and M2 static scheduler for the Baidu Famou Cup task. The active planning interval is **2026-08-01 00:00 through 2026-08-07 00:00 UTC**.
 
-## Current M1/M2 state
+## Current handoff state
 
-- **Current M1:** August 2026 A/B/C plus refined D illumination windows.
-- Horizon: 2026-08-01 00:00:00 through 2026-08-07 00:00:00 UTC
-- Scale: 10,000 targets and 10 ground stations
-- August A/B/C is stored in `m1_validation/formal_20260801_candidate/`; D v2 is the only current candidate source.
-- M2 baselines, local optimization, and the independent Referee are configured to read `D_illumination_refined_v2` only. A missing or mismatched D file/hash is a hard error; there is no C fallback.
-- No August M2 champion exists yet. Old October schedules and scores are historical and must not be used as August results.
-- See [`docs/m1/M1_AUGUST_REBUILD_STATUS.md`](docs/m1/M1_AUGUST_REBUILD_STATUS.md) and [`docs/m2/M2_D_LAYER_STATUS.md`](docs/m2/M2_D_LAYER_STATUS.md) for cache identity, limits, and M2 status.
+- M1 A/B/C and the refined D illumination layer are available under `m1_validation/formal_20260801_candidate/`.
+- M2 scheduler and independent Referee accept only the SHA-256-pinned `D_illumination_refined_v2` layer. They fail closed on path, manifest, time-range, or hash mismatch.
+- A 10-target D-based smoke baseline passed. A full 10,000-target M2 baseline and August champion have **not** been generated yet. Generate and referee that baseline before comparing optimizers.
+- D checks use adaptive refinement and independent sampled validation; they are not a proof of continuous-time completeness.
+- The official normalization formula for the 50% coverage and 50% score components remains unspecified. Report raw coverage and raw score separately.
 
-M1 validation combines stratified sampling and a deterministic fixed-grid outside-window check; it is not a continuous-time completeness proof. The organizer has not supplied the normalization formula for the 50% coverage and 50% score components, so this project reports raw coverage and raw score separately.
+Start with [`RUNBOOK.md`](RUNBOOK.md), [`docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md`](docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md), and [`docs/m2/M2_D_LAYER_STATUS.md`](docs/m2/M2_D_LAYER_STATUS.md).
 
 ## Repository layout
 
 | Path | Purpose |
 |---|---|
-| `visibility.py`, `formal_cache.py`, `formal_recompute_aug2026.py` | M1 propagation, adaptive window discovery, refinement, and current resumable Aug cache generation |
-| `illumination_filter_aug2026.py`, `repair_d_ambiguities_aug2026.py` | corrected D generation and versioned local refinement for the Aug cache |
-| `optical_validation.py`, `validator.py` | independent M1 validation components |
-| `m1_results/` | compact accepted samples, manifests, checksums, and review reports |
-| `m2_scheduler.py` | confirmed-rule scoring and baseline scheduling |
-| `m2_referee.py` | independent M2 legality and score verification |
-| `m2_local_search.py`, `m2_max_coverage_score.py` | Fast Local optimization |
-| `m2_math_opt_feasibility.py`, `m2_neighborhood_diagnosis.py`, `m2_milp_lns.py` | auxiliary MILP and MILP-LNS experiments |
-| `m2_optimizer_interface.py`, `run_m2_optimizer.py` | unified `fast_local`, `milp_rebuild`, and `hybrid` interface |
-| `m2_results/` | Historical October M2 records; new August outputs must use a separate August-named directory |
-| `local_archive/m2_results_legacy_v2/` | pre-illumination schedules and scores retained for historical audit only |
-| `docs/README.md` | document index for rules, M1, M2, team, FAMOU, and repository records |
-| `docs/rules/CONTEST_RULES.md` | confirmed rules and unresolved official normalization |
-| `docs/famou/FAMOU_TASK.md` | autonomous optimization assignment and evidence requirements |
-| `RUNBOOK.md` | environment, checks, and reproducible commands |
+| `m1.py`, `visibility.py`, `formal_cache.py`, `formal_recompute_aug2026.py` | Orbit propagation, adaptive visibility search, and resumable August A/B/C generation |
+| `illumination_filter_aug2026.py`, `repair_d_ambiguities_aug2026.py` | D sunlit-window generation and targeted boundary refinement |
+| `optical_validation.py`, `validator.py` | Independent M1 checks |
+| `m2_scheduler.py`, `m2_referee.py` | M2 baselines, scoring, and independent legality verification |
+| `m2_local_search.py`, `m2_max_coverage_score.py` | Fast Local optimizer |
+| `m2_math_opt_feasibility.py`, `m2_neighborhood_diagnosis.py`, `m2_milp_lns.py` | MILP and MILP-LNS components used by optional optimization modes |
+| `m2_optimizer_interface.py`, `run_m2_optimizer.py` | Unified `fast_local`, `milp_rebuild`, and `hybrid` controller |
+| `test_*.py` | Unit and small synthetic regression tests |
+| `m1_validation/formal_20260801_candidate/` | Local M1 cache; large data is excluded from ordinary Git |
+| `docs/` | Current rules, cache identity, run instructions, and optimization handoff |
 
-MILP is an implemented and experimentally evaluated auxiliary local mathematical optimization method. It does not provide a global optimality guarantee for the complete continuous-time scheduling problem. See `docs/m2/M2_MATH_MODULE_AUDIT.md`.
+MILP solves selected finite candidate neighborhoods. It does not prove global optimality for the continuous-time scheduling problem.
 
 ## Setup and fast tests
 
-Python 3.11 or newer is recommended. The accepted workstation used Python 3.13.
+Python 3.11 or newer is recommended.
 
 ```bash
 python3 -m venv .venv
@@ -47,42 +40,6 @@ python -m pip install -r requirements-validation.txt
 python -m unittest -v test_code_fixes test_m2 test_m2_math_opt test_m2_optimizer_interface test_visibility.SyntheticTests
 ```
 
-## Restricted and large data
+## Restricted inputs and cache
 
-The October M1 cache and all October M2 schedules are history only. Current M2 inputs are the August refined-D cache configured in `m2_config.json`. The full cache and raw inputs stay out of ordinary Git; verify local data against the manifest before running.
-
-Historical October checksums remain available for audit only:
-
-```bash
-shasum -a 256 -c m1_results/M1_V2_SHA256SUMS.txt
-```
-
-The ordinary Git history excludes the full M1 cache, detailed optimizer runs, complete current schedule, cross-team source packages, local virtual environments, and FAMOU delivery archives. Original TLE, station, priority, and ephemeris files may only be redistributed through an authorized channel.
-
-M2 must be switched to the validated Aug D layer before any new schedule is generated. The Oct D layer must not be selected by defaults or by restoring old configuration files.
-
-The root directory intentionally contains only the stable executable modules, current command-line
-entry points, and their tests. Historical scripts are under `local_archive/legacy_scripts/`; historical
-root-level tables are under `local_archive/legacy_results/root_outputs/`. Those archives are retained
-for traceability and are not current inputs.
-
-## Current M2 commands
-
-Start with a small D-based baseline and verify all output with the independent Referee:
-
-```bash
-.venv/bin/python run_m2_baselines.py --sizes 10 --out m2_results/aug2026_smoke
-```
-
-After creating a legal August schedule, optional optimization preserves that seed’s own coverage count:
-
-```bash
-.venv/bin/python run_m2_optimizer.py \
-  --mode fast_local \
-  --schedule path/to/d_validated_schedule.csv \
-  --budget 300 \
-  --seed 20260801 \
-  --output-dir m2_results/aug2026_optimizer_runs
-```
-
-`milp_rebuild` and `hybrid` remain optional research modes. Every promoted candidate must preserve the input schedule’s coverage and pass the independent Referee with zero violations. No October coverage count is assumed for August.
+Raw TLE, station, priority, and DE421 files and all full window caches stay out of ordinary Git. Obtain them through an authorized team channel and verify the August D window/manifest identities in `m2_config.json` before running.

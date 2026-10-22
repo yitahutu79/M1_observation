@@ -1,4 +1,4 @@
-"""Archived FAMOU package helper; no current August full-baseline package is available."""
+"""Prepare a FAMOU handoff package after a full August D-based baseline is accepted."""
 from __future__ import annotations
 
 import argparse
@@ -29,10 +29,9 @@ TESTS = [
 DOCS = [
     "README.md", "RUNBOOK.md", "docs/rules/CONTEST_RULES.md", "docs/famou/FAMOU_TASK.md",
     "docs/m1/M1_AUGUST_REBUILD_STATUS.md", "docs/m1/D_AUGUST_BOUNDARY_REPAIR.md", "docs/m2/M2_RULES_CONFIRMED.md",
-    "docs/m2/M2_D_LAYER_STATUS.md", "docs/m2/M2_REVISED_BASELINES.md", "docs/m2/M2_BOTTLENECK_ANALYSIS.md", "docs/m2/M2_MATH_OPT_FEASIBILITY.md",
-    "docs/m2/M2_NEIGHBORHOOD_DIAGNOSIS.md", "docs/m2/MILP_LNS_RESULTS.md", "docs/m2/M2_OPTIMIZER_INTERFACE.md",
-    "docs/m2/M2_OPTIMIZER_COMPARISON.md", "docs/m2/M2_MATH_MODULE_AUDIT.md",
-    "docs/team/TEAM_SIX_TARGET_RECOVERY.md",
+    "docs/m2/M2_D_LAYER_STATUS.md", "docs/m2/M2_REVISED_BASELINES.md",
+    "docs/m2/M2_OPTIMIZER_INTERFACE.md", "docs/m2/M2_MATH_MODULE_AUDIT.md",
+    "docs/m2/M2_MATH_OPTIMIZATION_HANDOFF.md",
 ]
 CONFIG = ["requirements.txt", "requirements-validation.txt", "m2_config.json"]
 
@@ -83,7 +82,7 @@ def main() -> None:
     parser.parse_args()
     raise SystemExit(
         "Package generation is intentionally disabled until a full August D-based M2 schedule is "
-        "independently refereed and frozen. The existing October package is historical only."
+        "independently refereed and frozen. No full-scale August baseline exists yet."
     )
 
 

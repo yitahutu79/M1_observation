@@ -1,6 +1,6 @@
 # M2 Confirmed Competition Rules — August Horizon
 
-The active static planning horizon is 2026-08-01 00:00:00 through 2026-08-07 00:00:00 UTC. M2 reads only the configured `D_illumination_refined_v2` windows, the matching August target-status table, and the priority archive. October schedules and scores are historical only.
+The active static planning horizon is 2026-08-01 00:00:00 through 2026-08-07 00:00:00 UTC. M2 reads only the configured `D_illumination_refined_v2` windows, the matching August target-status table, and the priority archive.
 
 ## Legal observation
 

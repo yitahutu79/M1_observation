@@ -7,8 +7,7 @@
 ## Current input
 
 The default input is the satellite-illumination D-layer candidate configured in `m2_config.json`.
-Pre-D champions and schedules are archived under `local_archive/m2_results_legacy_v2/` and must not be used as current inputs.
-A new D-layer baseline schedule must be generated and accepted by the independent Referee before optimization. The optimizer uses that seed’s measured coverage as its hard coverage floor; it does not assume the October value of 9,849.
+A new D-layer baseline schedule must be generated and accepted by the independent Referee before optimization. The optimizer uses that seed’s measured coverage as its hard coverage floor; it uses the measured coverage of the supplied schedule.
 
 ## Python interface
 

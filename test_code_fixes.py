@@ -65,7 +65,7 @@ class FixTests(unittest.TestCase):
     def test_c_dependency_and_missing_output(self):
         with tempfile.TemporaryDirectory() as q:
             root=Path(q); inp=root/'input';inp.write_text('x')
-            args=SimpleNamespace(start='2026-10-01T00:00:00Z',end='2026-10-07T00:00:00Z',step=60,time_scale='UTC',priority=str(inp))
+            args=SimpleNamespace(start='2026-08-01T00:00:00Z',end='2026-08-07T00:00:00Z',step=60,time_scale='UTC',priority=str(inp))
             for name in ['A_orbit','B_night']:
                 atomic_json(root/name/'manifest.json',{'source_version':'v1','algorithm':{'test':1}})
                 rows=[dict(target_id='1',station_id='1',start_s=0,end_s=100)]
@@ -86,7 +86,7 @@ class FixTests(unittest.TestCase):
             def __call__(self,t,s):return 20+0*t
         with tempfile.TemporaryDirectory() as q:
             q=Path(q);inp=q/'input';inp.write_text('x')
-            args=SimpleNamespace(start='2026-10-01T00:00:00Z',end='2026-10-07T00:00:00Z',step=60,time_scale='UTC',tle=str(inp),stations=str(inp),targets=1)
+            args=SimpleNamespace(start='2026-08-01T00:00:00Z',end='2026-08-07T00:00:00Z',step=60,time_scale='UTC',tle=str(inp),stations=str(inp),targets=1)
             ts=load.timescale(builtin=True)
             with patch('formal_cache.OrbitEvaluator',Ev):
                 layer_a(args,q,[('x','1 12345','2 12345')],[dict(id=1,lat=0,lon=0,elevation_m=0)],ts,datetime(2026,10,1,tzinfo=timezone.utc),np.array([0,60,120.]))

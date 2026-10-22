@@ -1,4 +1,4 @@
-"""HISTORICAL October D score maximizer; its 9,849-target bound is not an August result."""
+"""Reusable score and local-search operators for D-based M2 optimization."""
 from __future__ import annotations
 
 import argparse
@@ -293,9 +293,9 @@ def optimize(schedule:MutableSchedule,seed:str,budget:float,random_seed:int,prio
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Archived October experiment runner; unavailable for current August D results.")
+    parser = argparse.ArgumentParser(description="Standalone historical experiment runner disabled; use the unified D-validated optimizer.")
     parser.parse_args()
-    raise SystemExit('Archived October score-maximization runner is disabled. Its 9,849-target seed is not an August objective; use the D-aware unified optimizer with a D-validated seed.')
+    raise SystemExit('Standalone score-maximization runner is disabled. Use the unified optimizer with a D-validated seed.')
 
 
 if __name__=="__main__":main()
