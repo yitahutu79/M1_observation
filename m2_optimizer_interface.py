@@ -1,4 +1,4 @@
-"""Unified pre-FAMOU interface for M2 optimizers.
+"""Unified M2 optimizer interface for schedules built on the configured August D layer.
 
 The public entry point is :func:`optimize_schedule`.  It accepts a legal CSV
 schedule, a wall-clock budget, a fixed seed, and one of three modes:
@@ -29,10 +29,9 @@ from m2_referee import referee
 from m2_scheduler import load_rules, read_priority, write_schedule
 
 ROOT = Path(__file__).resolve().parent
-CACHE = ROOT / "m1_validation/formal_20261001_v2"
+CACHE = ROOT / json.loads((ROOT / "m2_config.json").read_text(encoding="utf-8"))["candidate_data_directory"]
 CONFIG = ROOT / "m2_config.json"
 PRIORITY = ROOT / "data/优先级.zip"
-HARD_COVERAGE = 9849
 SUPPORTED_MODES = ("fast_local", "milp_rebuild", "hybrid")
 DEFAULT_MODE = "fast_local"
 
@@ -114,7 +113,7 @@ def freeze_champion(source: Path, destination: Path, seed: int, budget_s: float)
     if not config_copy.exists():
         shutil.copy2(CONFIG, config_copy)
     manifest = {
-        "schema_version": "m2-champion-1.0",
+        "schema_version": "m2-champion-d-1.0",
         "source": str(source.relative_to(ROOT)),
         "schedule": str(schedule_copy.relative_to(ROOT)),
         "schedule_sha256": source_hash,
@@ -123,12 +122,12 @@ def freeze_champion(source: Path, destination: Path, seed: int, budget_s: float)
         "optimizer": "traditional_local_search",
         "seed": seed,
         "budget_s": budget_s,
-        "hard_coverage": HARD_COVERAGE,
-        "score": 29556.345194860733,
+        "hard_coverage": len({row["canonical_target_id"] for row in load_schedule(source)}),
+        "score": sum(row["score"] for row in load_schedule(source)),
         "m1_cache": str(CACHE.relative_to(ROOT)),
-        "m1_c_sha256": sha256(CACHE / "C_optical/windows.csv"),
-        "m1_status_sha256": sha256(CACHE / "A_orbit/target_status.csv"),
-        "m1_manifest_sha256": sha256(CACHE / "C_optical/manifest.json"),
+        "m1_d_sha256": sha256(CACHE / "windows.csv"),
+        "m1_status_sha256": sha256(CACHE.parent / "A_orbit/target_status.csv"),
+        "m1_d_manifest_sha256": sha256(CACHE / "manifest.json"),
     }
     manifest_path = destination / "champion_manifest.json"
     if manifest_path.exists():
@@ -180,7 +179,7 @@ def _run_fast_until(schedule: MutableSchedule, rng: random.Random, tracker: Trac
 
 def _milp_attempt(current: list[dict], index: WindowIndex, rules, rng: random.Random,
                   deadline: float, local_limit_s: float, run_dir: Path, log_path: Path,
-                  phase: int, tried: set[tuple]) -> tuple[list[dict], bool]:
+                  phase: int, tried: set[tuple], required_coverage: int) -> tuple[list[dict], bool]:
     before = sum(task["score"] for task in current)
     pool = neighborhood_pool(current, index, rules)
     available = [item for item in pool if (item["name"], round(before, 6)) not in tried]
@@ -207,7 +206,7 @@ def _milp_attempt(current: list[dict], index: WindowIndex, rules, rng: random.Ra
                      solver_status=info["status"], solver_message=info["message"],
                      lower_bound=info["feasible_local_score"], upper_bound=info["upper_bound_local_score"],
                      gap=info["mip_gap"], candidate_score=candidate_score, coverage=coverage)
-        if coverage != HARD_COVERAGE:
+        if coverage != required_coverage:
             event["result"] = "hard_coverage_rejected"
         elif candidate_score <= before + 1e-9:
             event["result"] = "no_strict_gain"
@@ -219,7 +218,7 @@ def _milp_attempt(current: list[dict], index: WindowIndex, rules, rng: random.Ra
             _atomic_schedule(candidate_path, proposed)
             check = referee(candidate_path, CACHE, PRIORITY, CONFIG, 10000, violation_path)
             event.update(referee_violations=check["violation_count"], referee_score=check["total_score"])
-            if check["legal"] and check["unique_covered_targets"] == HARD_COVERAGE and check["total_score"] > before + 1e-9:
+            if check["legal"] and check["unique_covered_targets"] == required_coverage and check["total_score"] > before + 1e-9:
                 event["result"] = "accepted"
                 event["gain"] = check["total_score"] - before
                 event["runtime_s"] = time.perf_counter() - started
@@ -239,6 +238,9 @@ def optimize_schedule(request: OptimizationRequest, index: WindowIndex | None = 
         raise ValueError(f"unsupported mode {request.mode!r}; choose from {SUPPORTED_MODES}")
     if request.budget_s <= request.final_referee_reserve_s:
         raise ValueError("budget must exceed final Referee reserve")
+    config_identity = json.loads(CONFIG.read_text(encoding="utf-8"))
+    if str(config_identity.get("candidate_windows_sha256", "")).startswith("PENDING_"):
+        raise RuntimeError("configured D cache is not released; C fallback is prohibited")
     request.output_dir.mkdir(parents=True, exist_ok=True)
     run_name = request.run_name or f"{request.mode}_{int(request.budget_s)}s_seed{request.seed}"
     run_dir = request.output_dir / run_name
@@ -251,22 +253,28 @@ def optimize_schedule(request: OptimizationRequest, index: WindowIndex | None = 
     base_tasks = load_schedule(request.schedule_path)
     initial_score = sum(task["score"] for task in base_tasks)
     initial_coverage = len({task["canonical_target_id"] for task in base_tasks})
-    if initial_coverage != HARD_COVERAGE:
-        raise ValueError(f"input coverage {initial_coverage} != {HARD_COVERAGE}")
+    if initial_coverage == 0:
+        raise ValueError("input schedule has no covered targets")
+    required_coverage = initial_coverage
+    # Establish that the seed itself is a legal August D schedule before optimizing it.
+    seed_check = referee(request.schedule_path, CACHE, PRIORITY, CONFIG, 10000,
+                         request.output_dir / f"{run_name}_seed_violations.csv")
+    if not seed_check["legal"] or seed_check["unique_covered_targets"] != required_coverage:
+        raise ValueError(f"seed schedule failed D-layer Referee: {seed_check}")
     rules = load_rules(CONFIG)
     priorities = read_priority(PRIORITY)
     targets = sorted({task["canonical_target_id"] for task in base_tasks}, key=int)
     owns_index = index is None
     if index is None:
         database = Path("/tmp") / f"m2_optimizer_{run_name}.sqlite"
-        index = WindowIndex.build(database, CACHE / "C_optical/windows.csv", PRIORITY)
+        index = WindowIndex.build(database, CACHE / "windows.csv", PRIORITY)
     started = time.perf_counter()
     deadline = started + request.budget_s
     search_deadline = deadline - request.final_referee_reserve_s
     rng = random.Random(request.seed)
     current = [dict(task) for task in base_tasks]
     tracker = Tracker(run_name, request.mode, request.budget_s, initial_score)
-    tracker.point("initial", initial_score, HARD_COVERAGE, len(current), len(current) - HARD_COVERAGE)
+    tracker.point("initial", initial_score, required_coverage, len(current), len(current) - required_coverage)
     phase = 0
     tried: set[tuple] = set()
     if request.mode == "fast_local":
@@ -285,7 +293,8 @@ def optimize_schedule(request: OptimizationRequest, index: WindowIndex | None = 
         while search_deadline - time.perf_counter() > 20.0:
             phase += 1
             current, accepted = _milp_attempt(current, index, rules, rng, search_deadline,
-                                               request.local_milp_limit_s, run_dir, log_path, phase, tried)
+                                               request.local_milp_limit_s, run_dir, log_path, phase, tried,
+                                               required_coverage)
             if accepted:
                 tried.clear()
                 _atomic_schedule(run_dir / "checkpoint_best.csv", current)
@@ -301,7 +310,8 @@ def optimize_schedule(request: OptimizationRequest, index: WindowIndex | None = 
                 break
             current = schedule.finalize()
             rebuilt, accepted = _milp_attempt(current, index, rules, rng, search_deadline,
-                                               request.local_milp_limit_s, run_dir, log_path, phase, tried)
+                                               request.local_milp_limit_s, run_dir, log_path, phase, tried,
+                                               required_coverage)
             if accepted:
                 current = rebuilt
                 tried.clear()
@@ -326,7 +336,7 @@ def optimize_schedule(request: OptimizationRequest, index: WindowIndex | None = 
     violation_path = run_dir / "referee_violations.csv"
     check = referee(output_path, CACHE, PRIORITY, CONFIG, 10000, violation_path)
     elapsed = time.perf_counter() - started
-    if not check["legal"] or check["unique_covered_targets"] != HARD_COVERAGE or check["total_score"] < initial_score - 1e-9:
+    if not check["legal"] or check["unique_covered_targets"] != required_coverage or check["total_score"] < initial_score - 1e-9:
         raise RuntimeError(f"candidate rejected by unified acceptance gate: {check}")
     accepted = sum(1 for line in log_path.read_text(encoding="utf-8").splitlines()
                    if json.loads(line).get("event") in {"accepted_fast"} or json.loads(line).get("result") == "accepted")

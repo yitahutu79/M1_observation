@@ -1,5 +1,5 @@
-# M2 Review Sample
+# M2 Results
 
-`M2_CURRENT_CHAMPION_SAMPLE.csv` contains the first 10 scheduled observations from each station in the current accepted champion. Times are seconds from `2026-10-01T00:00:00Z`. The sample is for schema and review only; it is not a complete schedule and cannot reproduce the reported score.
+The previous M2 schedules and champion metadata were generated against the pre-illumination formal C layer. They are preserved under `local_archive/m2_results_legacy_v2/` for historical audit only and are not valid D-layer results.
 
-The complete champion is distributed through an authorized channel and must match SHA-256 `9804bf0dbd2bf99d981420fb041b92cf6617391ec826d65a09f700317807723d`.
+New M2 experiments must use `m2_config.json`, which pins `m1_validation/formal_20260801_candidate/D_illumination_refined_v2/` and its D windows/manifest SHA-256. Current baseline runs belong in a new August-named output directory. A new champion can be named only after the D-aware baselines and independent Referee have completed; no October champion or score is valid for the August horizon.

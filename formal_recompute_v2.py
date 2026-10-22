@@ -1,6 +1,7 @@
-"""Resumable formal M1 v2 recomputation; never writes the historical cache."""
+"""HISTORICAL October 2026 M1 v2 recomputation. Current August runs use formal_recompute_aug2026.py."""
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import json
@@ -327,6 +328,11 @@ def build_c(config, a_manifest, b_manifest):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Historical October M1 v2 rerun only.")
+    parser.add_argument("--historical-october-recompute", action="store_true",
+                        help="explicitly authorize using the hard-coded October cache paths")
+    if not parser.parse_args().historical_october_recompute:
+        raise SystemExit("This runner is for the historical October horizon. Use formal_recompute_aug2026.py for current planning.")
     lock = OUTPUT / ".recompute.lock"
     OUTPUT.mkdir(parents=True, exist_ok=True)
     descriptor = None

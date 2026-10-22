@@ -1,4 +1,6 @@
-# M1 Formal v2 Data Manifest and Recovery
+# M1 Formal v2 Data Manifest and Recovery — October Horizon (Historical)
+
+> The August 1–7 rebuild is current. The paths and checksums below identify the immutable October cache only and must not be restored as the current M2 source.
 
 ## Dataset identity
 

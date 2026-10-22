@@ -1,4 +1,4 @@
-"""Run confirmed-rule M2 baselines and independent Referee validation."""
+"""Run August M2 baselines against the configured refined D illumination layer."""
 from __future__ import annotations
 
 import argparse
@@ -24,16 +24,20 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def verify_formal_inputs(cache: Path, priority: Path) -> dict:
-    c_manifest = json.loads((cache / "C_optical/manifest.json").read_text(encoding="utf-8"))
-    a_manifest = json.loads((cache / "A_orbit/manifest.json").read_text(encoding="utf-8"))
+def verify_formal_inputs(cache: Path, priority: Path, config_path: Path) -> dict:
+    d_manifest = json.loads((cache / "manifest.json").read_text(encoding="utf-8"))
+    base = cache.parent
+    c_manifest = json.loads((base / "C_optical/manifest.json").read_text(encoding="utf-8"))
+    a_manifest = json.loads((base / "A_orbit/manifest.json").read_text(encoding="utf-8"))
     actual = {
-        "C_windows_sha256": file_sha256(cache / "C_optical/windows.csv"),
-        "target_status_sha256": file_sha256(cache / "A_orbit/target_status.csv"),
+        "D_windows_sha256": file_sha256(cache / "windows.csv"),
+        "D_manifest_sha256": file_sha256(cache / "manifest.json"),
+        "target_status_sha256": file_sha256(base / "A_orbit/target_status.csv"),
         "priority_sha256": file_sha256(priority),
     }
     expected = {
-        "C_windows_sha256": c_manifest["windows_sha256"],
+        "D_windows_sha256": d_manifest["windows_sha256"],
+        "D_manifest_sha256": json.loads(config_path.read_text(encoding="utf-8"))["candidate_manifest_sha256"],
         "target_status_sha256": a_manifest["target_status_sha256"],
         "priority_sha256": c_manifest["priority_file_sha256"],
     }
@@ -105,7 +109,7 @@ def write_csv_outputs(out: Path, results: list[dict]):
             })
     pareto_fields = ["target_limit", "algorithm", "unique_covered_targets", "coverage_rate", "total_score",
                      "task_count", "repeated_observation_count", "experimental_composite"]
-    with Path("M2_PARETO_RESULTS.csv").open("w", encoding="utf-8", newline="") as handle:
+    with (out / "M2_PARETO_RESULTS.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=pareto_fields, lineterminator="\n"); writer.writeheader()
         for item in results:
             if not item["pareto_nondominated"]:
@@ -120,11 +124,11 @@ def write_csv_outputs(out: Path, results: list[dict]):
             })
 
 
-def write_full_report(results: list[dict], integrity: dict, audits: dict[int, dict]):
+def write_full_report(out: Path, results: list[dict], integrity: dict, audits: dict[int, dict]):
     lines = [
         "# M2 Full Static-Planning Results", "",
-        "All schedules use only formal M1 v2 C windows, target statuses, and the original priority archive. "
-        "Their SHA-256 values were recomputed before scheduling and all matched the accepted manifests.", "",
+        "All current schedules use only the August refined D illumination windows, target statuses, and the "
+        "original priority archive. The D windows and manifest SHA-256 values were recomputed before scheduling.", "",
         "Every schedule passed the independent Referee. Raw coverage and raw score are reported separately; "
         "no official final score is claimed because the organizer has not provided normalization formulas.", "",
         "## Main results", "",
@@ -163,7 +167,7 @@ def write_full_report(results: list[dict], integrity: dict, audits: dict[int, di
         f"- 1,000-target candidate audit: `{audits.get(1000)}`.",
         f"- 10,000-target candidate audit: `{audits.get(10000)}`.",
         "- Empty violation CSV files contain only their header.",
-        "- The Referee checks every scheduled task against its exact cited formal C row.",
+        "- The Referee checks every scheduled task against its exact cited D row and D-to-C provenance, and independently samples satellite illumination with Skyfield.",
         "- Target cooldown is checked globally after sorting visits across all stations.",
         "- This is static six-day planning only; no urgent-task or dynamic-replanning model is included.",
         "", "## Reproduce", "", "```bash",
@@ -178,22 +182,22 @@ def write_full_report(results: list[dict], integrity: dict, audits: dict[int, di
         "  --summary /tmp/m2_referee_summary.json",
         "```",
     ]
-    Path("M2_FULL_RESULTS.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (out / "M2_FULL_RESULTS.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cache", default="m1_validation/formal_20261001_v2")
+    parser.add_argument("--cache", default="m1_validation/formal_20260801_candidate/D_illumination_refined_v2")
     parser.add_argument("--priority", default="data/优先级.zip")
     parser.add_argument("--config", default="m2_config.json")
     parser.add_argument("--sizes", nargs="+", type=int, default=[1000, 10000])
-    parser.add_argument("--out", default="local_archive/m2_results/results_confirmed")
+    parser.add_argument("--out", default="m2_results/aug2026_baselines")
     args = parser.parse_args()
     cache, priority, config_path, out = map(Path, [args.cache, args.priority, args.config, args.out])
     config = json.loads(config_path.read_text(encoding="utf-8"))
     out.mkdir(parents=True, exist_ok=True)
     integrity_started = time.perf_counter()
-    integrity = verify_formal_inputs(cache, priority)
+    integrity = verify_formal_inputs(cache, priority, config_path)
     integrity["elapsed_s"] = time.perf_counter() - integrity_started
     dump_json(out / "input_integrity.json", integrity)
     priorities = read_priority(priority)
@@ -233,7 +237,7 @@ def main():
     write_csv_outputs(out, results)
     dump_json(out / "summary.json", {"configuration":config, "input_integrity":integrity,
                                       "candidate_audits":audits, "runs":results})
-    write_full_report(results, integrity, audits)
+    write_full_report(out, results, integrity, audits)
 
 
 if __name__ == "__main__":

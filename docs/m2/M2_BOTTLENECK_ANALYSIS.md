@@ -1,5 +1,7 @@
 # M2 Scheduling Bottleneck Analysis
 
+> **Historical October analysis.** Counts, target classifications, and C-window references below are specific to the October cache and cannot be used as August D results.
+
 ## Scope and fixed inputs
 
 This analysis uses only `m1_validation/formal_20261001_v2/C_optical/windows.csv`, the v2 target-status table, `data/优先级.zip`, and `m2_config.json`. The formal C-window SHA-256 is `f05e35c97e4ef37321418efd8c51fd7796f03a316f9dbeb9c80ee0c93332f2df`. No M1 file was changed.

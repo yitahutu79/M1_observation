@@ -1,4 +1,6 @@
-# M1 Formal Results (v2)
+# M1 Formal Results (v2) — October Horizon (Historical)
+
+> **Superseded for current planning.** The organizer changed the horizon to 2026-08-01 through 2026-08-07 UTC on 2026-10-21. The metrics and checks below are the immutable October v2 record; they do not describe the current August rebuild and must not be used as current M2 input.
 
 ## Review status
 

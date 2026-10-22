@@ -1,13 +1,13 @@
-# M2 Confirmed Competition Rules
+# M2 Confirmed Competition Rules — August Horizon
 
-The static planning horizon is 2026-10-01 00:00:00 through 2026-10-07 00:00:00 UTC. M2 reads only the accepted `m1_validation/formal_20261001_v2` C layer, its target-status table, and the original priority archive.
+The active static planning horizon is 2026-08-01 00:00:00 through 2026-08-07 00:00:00 UTC. M2 reads only the configured `D_illumination_refined_v2` windows, the matching August target-status table, and the priority archive. October schedules and scores are historical only.
 
 ## Legal observation
 
 - One observation lasts from 120 through 240 seconds, inclusive.
 - A station can execute only one task at a time.
 - Consecutive tasks for different targets at the same station require at least 30 seconds between the earlier end and the later start.
-- Each task must be contained in a formal C window with the same target and station.
+- Each task must be contained in a refined D illumination window with the same target and station. The independent Referee also checks the D row’s C provenance and independently samples satellite illumination.
 - A target may be observed repeatedly across any stations.
 - If one observation of a target ends at time `e`, its next observation may start at or after `e + 172800` seconds. The Referee checks this globally across all 10 stations.
 

@@ -1,15 +1,24 @@
 # M2 Experiment History and Rejected Attempts
 
+> **Historical October results.** Every cache path, baseline, score, and comparison below belongs to the October 1–7 horizon and earlier candidate data. The current August 1–7 horizon requires a new M1/D cache and a fresh M2 baseline before any of these figures can be used as current performance.
+
 This document is the reviewable record of the M2 experiments. The large raw run directories remain local
 under local_archive/ and are not required to understand the accepted result.
 
-## Current accepted path
+## Historical October accepted path
 
-- M1 input: formal_20261001_v2 only.
+- M1 input: formal_20261001_v2 C windows.
 - Independent Referee: unchanged and required for every accepted schedule.
 - Default optimizer: Fast Local through run_m2_optimizer.py.
 - Current champion: coverage 9,849, raw score 32,311.5853472602, 13,248 tasks, 3,399 repeats,
   zero Referee violations.
+
+## Active August path
+
+- M1 candidate: `m1_validation/formal_20260801_candidate/D_illumination_refined_v2/` only.
+- M2 scheduler, independent Referee, and unified Fast Local/Hybrid optimizer load D windows and bind to the configured D window/manifest hashes.
+- The three 10-target smoke baselines each passed the D-aware Referee (10 covered, 30 tasks, raw score 96.0, zero violations). These are integration checks, not full-run results.
+- No full August baseline or champion has been produced. October metrics above do not describe the active horizon.
 
 ## Mathematical optimization experiments
 

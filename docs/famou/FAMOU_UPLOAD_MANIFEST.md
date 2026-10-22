@@ -1,5 +1,7 @@
 # FAMOU Upload Manifest
 
+> **Historical package manifest.** It describes the October project state. Do not use it to assemble the current August submission until the corrected D layer and a new M2 baseline have passed validation.
+
 - Package: artifacts/FAMOU_M2_AUTONOMOUS_20261019/
 - Archive: artifacts/FAMOU_M2_AUTONOMOUS_20261019.tar.gz
 - Archive SHA-256: 337d352ec066c4759a4b9ef23ebaf754b4d3a21b6696703d18265e5fe24b163a

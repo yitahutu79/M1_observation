@@ -1,4 +1,4 @@
-"""Iterative MILP large-neighborhood search under a fixed 9,849-target constraint."""
+"""HISTORICAL October MILP-LNS; the 9,849-target constraint is not the August baseline."""
 from __future__ import annotations
 
 import argparse
@@ -20,13 +20,12 @@ from m2_referee import referee
 from m2_scheduler import load_rules, read_priority, write_schedule
 
 ROOT=Path(__file__).resolve().parent
-CACHE=ROOT/"m1_validation/formal_20261001_v2"
+CACHE=ROOT / json.loads((ROOT/"m2_config.json").read_text(encoding="utf-8"))["candidate_data_directory"]
 CONFIG=ROOT/"m2_config.json"
 PRIORITY=ROOT/"data/优先级.zip"
 BASE=ROOT/"m2_results/full/M2_BEST_SCHEDULE.csv"
 OUT=ROOT/"local_archive/m2_results/milp_lns"
 DB=Path("/tmp/m2_milp_lns_windows.sqlite")
-HARD_COVERAGE=9849
 SEEDS=(20261015,20261016,20261017)
 LOCAL_SOLVE_CAP_S=5.0
 
@@ -127,14 +126,14 @@ def run_lns(index,rules,budget_s,seed,base_tasks,base_score):
             upper=info["upper_bound_local_score"];gap=info["mip_gap"]
             proposed=assemble(fixed,candidates,selected,f"{run}_iter{iteration}")
             candidate_score=sum(t["score"] for t in proposed);coverage=len({t["canonical_target_id"] for t in proposed})
-            if coverage!=HARD_COVERAGE:reason="hard_coverage_rejected"
+            if coverage!=required_coverage:reason="hard_coverage_rejected"
             elif candidate_score<=before+1e-9:reason="no_strict_gain"
             elif time.perf_counter()>=deadline:reason="budget_exhausted_before_referee"
             else:
                 candidate_path=run_dir/f"candidate_{iteration}.csv";atomic_schedule(candidate_path,proposed)
                 check=referee(candidate_path,CACHE,PRIORITY,CONFIG,10000,run_dir/f"candidate_{iteration}_violations.csv")
                 violations=check["violation_count"]
-                if check["legal"] and check["unique_covered_targets"]==HARD_COVERAGE and check["total_score"]>before+1e-9:
+                if check["legal"] and check["unique_covered_targets"]==required_coverage and check["total_score"]>before+1e-9:
                     current=[dict(x) for x in proposed];current_score=check["total_score"];best=[dict(x) for x in current]
                     accepted=True;accepted_count+=1;reason="accepted_after_referee"
                     atomic_schedule(run_dir/"checkpoint_best.csv",current)
@@ -162,7 +161,7 @@ def run_lns(index,rules,budget_s,seed,base_tasks,base_score):
     final=finalize_tasks(best,f"milp_lns_seed{seed}");final_path=run_dir/"final.csv";atomic_schedule(final_path,final)
     check=referee(final_path,CACHE,PRIORITY,CONFIG,10000,run_dir/"final_violations.csv")
     elapsed=time.perf_counter()-started
-    if not check["legal"] or check["unique_covered_targets"]!=HARD_COVERAGE:raise RuntimeError(f"invalid LNS final {run}")
+    if not check["legal"] or check["unique_covered_targets"]!=required_coverage:raise RuntimeError(f"invalid LNS final {run}")
     return {"run":run,"method":"milp_lns","seed":seed,"allocated_s":budget_s,"elapsed_s":elapsed,
         "score":check["total_score"],"gain":check["total_score"]-base_score,"coverage":check["unique_covered_targets"],
         "tasks":check["task_count"],"repeats":check["repeated_observation_count"],"accepted_improvements":accepted_count,
@@ -170,13 +169,14 @@ def run_lns(index,rules,budget_s,seed,base_tasks,base_score):
 
 
 def run_traditional(index,rules,budget_s,seed,base_tasks,base_score,priorities,targets):
+    required_coverage=len({task["canonical_target_id"] for task in base_tasks})
     run=f"traditional_{int(budget_s)}s_seed{seed}";run_dir=OUT/run;run_dir.mkdir(parents=True,exist_ok=True)
     started=time.perf_counter();reserve=4.0;search_budget=max(0.5,budget_s-reserve)
     schedule=MutableSchedule([dict(x) for x in base_tasks],index,rules,run)
     schedule,tracker=traditional_optimize(schedule,"coverage_strict",search_budget,seed,priorities,targets)
     final=schedule.finalize();path=run_dir/"final.csv";atomic_schedule(path,final)
     check=referee(path,CACHE,PRIORITY,CONFIG,10000,run_dir/"final_violations.csv");elapsed=time.perf_counter()-started
-    if not check["legal"] or check["unique_covered_targets"]!=HARD_COVERAGE:raise RuntimeError(f"invalid traditional final {run}")
+    if not check["legal"] or check["unique_covered_targets"]!=required_coverage:raise RuntimeError(f"invalid traditional final {run}")
     curve=[]
     for point in tracker.curve:
         curve.append({"run":run,"method":"traditional_local_search","seed":seed,"allocated_s":budget_s,
@@ -199,51 +199,9 @@ def run_traditional(index,rules,budget_s,seed,base_tasks,base_score,priorities,t
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument("--budgets",default="120,300,600");args=parser.parse_args()
-    group_budgets=[float(x) for x in args.budgets.split(",")];OUT.mkdir(parents=True,exist_ok=True)
-    base_hash=sha256(BASE);base_tasks=load_schedule(BASE);base_score=sum(x["score"] for x in base_tasks)
-    if len({x["canonical_target_id"] for x in base_tasks})!=HARD_COVERAGE:raise RuntimeError("base coverage changed")
-    rules=load_rules(CONFIG);priorities=read_priority(PRIORITY);targets=sorted({x["canonical_target_id"] for x in base_tasks},key=int)
-    if DB.exists():DB.unlink()
-    index=WindowIndex.build(DB,CACHE/"C_optical/windows.csv",PRIORITY)
-    runs=[];curve=[];operations=[];best=None
-    for group_budget in group_budgets:
-        allocated=group_budget
-        for method in ("milp_lns","traditional_local_search"):
-            for seed in SEEDS:
-                if method=="milp_lns":result,c,o=run_lns(index,rules,allocated,seed,base_tasks,base_score)
-                else:result,c,o=run_traditional(index,rules,allocated,seed,base_tasks,base_score,priorities,targets)
-                result["group_budget_s"]=group_budget;runs.append(result);curve.extend(c);operations.extend(o)
-                if best is None or result["score"]>best["score"]:best=result
-                atomic_json(OUT/"experiment_checkpoint.json",{"base_sha256":base_hash,"completed_runs":runs,"best":best})
-    comparison_best=best
-    milp_best=max((row for row in runs if row["method"]=="milp_lns"),key=lambda row:row["score"])
-    best_schedule=ROOT/"m2_results/full/MILP_LNS_BEST_SCHEDULE.csv"
-    best_schedule.parent.mkdir(parents=True,exist_ok=True)
-    shutil.copy2(milp_best["schedule"],best_schedule)
-    shutil.copy2(comparison_best["schedule"],OUT/"OVERALL_COMPARISON_BEST.csv")
-    csv_write(ROOT/"m2_results/full/MILP_LNS_CURVE.csv",curve);csv_write(ROOT/"m2_results/full/MILP_LNS_OPERATIONS.csv",operations)
-    summaries=[]
-    for group_budget in group_budgets:
-        for method in ("milp_lns","traditional_local_search"):
-            sample=[r for r in runs if r["group_budget_s"]==group_budget and r["method"]==method]
-            values=[r["score"] for r in sample]
-            summaries.append({"group_budget_s":group_budget,"per_run_allocated_s":group_budget,
-                "method":method,"best_score":max(values),"mean_score":statistics.mean(values),
-                "score_stddev":statistics.pstdev(values),"mean_gain":statistics.mean(r["gain"] for r in sample),
-                "total_accepted_improvements":sum(r["accepted_improvements"] for r in sample),
-                "mean_elapsed_s":statistics.mean(r["elapsed_s"] for r in sample),"all_zero_violations":all(r["violations"]==0 for r in sample)})
-    final_check=referee(best_schedule,CACHE,PRIORITY,CONFIG,10000,OUT/"BEST_FINAL_VIOLATIONS.csv")
-    comparison_check=referee(OUT/"OVERALL_COMPARISON_BEST.csv",CACHE,PRIORITY,CONFIG,10000,
-                             OUT/"OVERALL_COMPARISON_BEST_VIOLATIONS.csv")
-    result={"base_sha256":base_hash,"base_score":base_score,"hard_coverage":HARD_COVERAGE,
-        "budget_definition":"each method and each fixed seed receives the full stated end-to-end budget",
-        "seeds":SEEDS,"local_milp_cap_s":LOCAL_SOLVE_CAP_S,"runs":runs,"summaries":summaries,
-        "best":milp_best,"comparison_best":comparison_best,
-        "best_schedule_sha256":sha256(best_schedule),
-        "comparison_best_schedule_sha256":sha256(OUT/"OVERALL_COMPARISON_BEST.csv"),
-        "final_referee":final_check,"comparison_best_referee":comparison_check}
-    atomic_json(OUT/"results.json",result);index.close();print(json.dumps({"summaries":summaries,"best":milp_best,"comparison_best":comparison_best,"final":final_check},indent=2))
+    parser = argparse.ArgumentParser(description="Archived October experiment runner; unavailable for current August D results.")
+    parser.parse_args()
+    raise SystemExit('Archived October MILP-LNS result runner is disabled. The MILP-LNS helper remains available through the D-aware unified optimizer.')
 
 
 if __name__=="__main__":main()

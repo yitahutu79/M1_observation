@@ -1,5 +1,7 @@
 # M2 Mathematical Optimization Module Audit
 
+> **Historical October audit.** Every fixed 9,849 coverage value and schedule/score below belongs to the October horizon. Current runs must use the August refined-D input and a new D-validated seed.
+
 审计日期：2026-10-19
 审计范围：MILP、MILP-LNS、统一 Hybrid 控制器，以及从六目标恢复解出发的单次 300 秒公平对照。
 保护约束：未修改 M1，未删除数学优化代码，未覆盖冠军或历史结果，未执行 Git push。

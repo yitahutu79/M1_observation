@@ -1,6 +1,6 @@
-# M2 Revised Greedy Baselines
+# M2 Greedy Baselines
 
-All baselines perform one global, static six-day plan. They use the same confirmed constraints but different target-processing orders. The scheduler constructs candidates; `m2_referee.py` independently reloads cited formal C rows and certifies the result.
+These are the current baseline algorithm definitions for a static six-day plan using the configured D illumination windows. The scheduler constructs candidates; `m2_referee.py` independently reloads the cited D rows, verifies their C provenance, and checks satellite illumination. Any numeric results in older M2 result files were produced on the October C horizon and remain historical only.
 
 ## 1. First-observation-first
 

@@ -4,21 +4,11 @@
 
 `m2_optimizer_interface.py` is the stable local boundary for the pre-FAMOU M2 optimizer. It does not call a FAMOU platform or assume a remote API. It accepts a legal schedule, wall-clock budget, random seed, and optimizer mode, and returns a validated candidate plus machine-readable metadata.
 
-## Frozen champion
+## Current input
 
-The pre-integration champion is frozen under `m2_optimizer/champion/`.
-
-- Optimizer: traditional local search
-- Source run: `traditional_600s_seed20261017`
-- Score: 29556.345194860733
-- Coverage: 9849
-- Seed: 20261017
-- Budget: 600 seconds
-- Schedule SHA-256: `f8e7def013abbb1aa653a4b16a62c98f7c7b2dad79ee2d7e002389ba8de5898d`
-- Frozen configuration SHA-256: `2729bc0d625470b5c471e430ed3c17dfc0aec730db49405f23257c7ddc18632d`
-- Independent Referee: PASS, zero violations
-
-`freeze_champion()` refuses to replace an existing snapshot or configuration with different bytes.
+The default input is the satellite-illumination D-layer candidate configured in `m2_config.json`.
+Pre-D champions and schedules are archived under `local_archive/m2_results_legacy_v2/` and must not be used as current inputs.
+A new D-layer baseline schedule must be generated and accepted by the independent Referee before optimization. The optimizer uses that seed’s measured coverage as its hard coverage floor; it does not assume the October value of 9,849.
 
 ## Python interface
 
@@ -27,11 +17,11 @@ from pathlib import Path
 from m2_optimizer_interface import OptimizationRequest, optimize_schedule
 
 request = OptimizationRequest(
-    schedule_path=Path("m2_optimizer/champion/CHAMPION_SCHEDULE.csv"),
+    schedule_path=Path("path/to/d_layer_baseline_schedule.csv"),
     mode="hybrid",                 # fast_local | milp_rebuild | hybrid
     budget_s=300.0,
     seed=20261017,
-    output_dir=Path("local_archive/m2_results/optimizer_runs/my_run"),
+    output_dir=Path("m2_results/d_layer_runs/my_run"),
     run_name="hybrid_trial",
     stagnation_s=12.0,
     local_milp_limit_s=5.0,
@@ -55,31 +45,32 @@ result = optimize_schedule(request)
 ```bash
 .venv/bin/python run_m2_optimizer.py \
   --mode fast_local \
-  --schedule m2_optimizer/champion/CHAMPION_SCHEDULE.csv \
+  --schedule path/to/d_layer_baseline_schedule.csv \
   --budget 300 \
   --seed 20261017 \
-  --output-dir local_archive/m2_results/optimizer_runs/manual_fast
+  --output-dir m2_results/d_layer_runs/manual_fast
 
 .venv/bin/python run_m2_optimizer.py \
   --mode milp_rebuild \
-  --schedule m2_optimizer/champion/CHAMPION_SCHEDULE.csv \
+  --schedule path/to/d_layer_baseline_schedule.csv \
   --budget 300 \
   --seed 20261017 \
-  --output-dir local_archive/m2_results/optimizer_runs/manual_milp
+  --output-dir m2_results/d_layer_runs/manual_milp
 
 .venv/bin/python run_m2_optimizer.py \
   --mode hybrid \
-  --schedule m2_optimizer/champion/CHAMPION_SCHEDULE.csv \
+  --schedule path/to/d_layer_baseline_schedule.csv \
   --budget 300 \
   --seed 20261017 \
   --stagnation-seconds 12 \
-  --output-dir local_archive/m2_results/optimizer_runs/manual_hybrid
+  --output-dir m2_results/d_layer_runs/manual_hybrid
 ```
 
 Reproduce the controlled comparison with:
 
 ```bash
 .venv/bin/python run_m2_optimizer_comparison.py \
+  --schedule path/to/d_layer_baseline_schedule.csv \
   --budget 300 \
   --seed 20261017 \
   --stagnation-seconds 12
@@ -105,10 +96,12 @@ Starts with fast local search. When no accepted score gain occurs for `stagnatio
 
 A candidate becomes a returned best only when all conditions hold:
 
-1. unique coverage is exactly 9849;
+1. unique coverage does not decrease from the D-layer baseline;
 2. score does not decrease from the input schedule;
 3. the independent `m2_referee.py` reports zero violations;
-4. cited windows belong to `formal_20261001_v2` and satisfy the official duration, station conflict, switch, cooldown and scoring rules.
+4. cited windows belong to the configured D-layer candidate cache and satisfy the official duration, station conflict, switch, cooldown and scoring rules.
+
+The Referee independently checks satellite illumination on a fixed one-second UTC grid over each scheduled task and reports this sampling step. This is sampled verification, not continuous-time proof.
 
 Individual MILP improvements are also passed through the independent Referee before being adopted.
 

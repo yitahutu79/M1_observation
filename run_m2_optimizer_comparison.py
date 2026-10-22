@@ -9,28 +9,26 @@ from pathlib import Path
 
 from m2_local_search import WindowIndex
 from m2_optimizer_interface import (CACHE, PRIORITY, ROOT, OptimizationRequest,
-                                    freeze_champion, optimize_schedule)
+                                    optimize_schedule)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--budget", type=float, default=300.0)
     parser.add_argument("--seed", type=int, default=20261017)
+    parser.add_argument("--schedule", type=Path, required=True,
+                        help="current August schedule already accepted by the D-aware Referee")
     parser.add_argument("--output-dir", type=Path,
-                        default=Path("local_archive/m2_results/optimizer_runs/comparison_300s_seed20261017"))
+                        default=Path("m2_results/aug2026_optimizer_runs/comparison_300s_seed20261017"))
     parser.add_argument("--stagnation-seconds", type=float, default=12.0)
     args = parser.parse_args()
-    champion_dir = ROOT / "m2_optimizer/champion"
-        freeze_champion(ROOT / "local_archive/m2_results/milp_lns/OVERALL_COMPARISON_BEST.csv",
-                    champion_dir, 20261017, 600.0)
-    champion = champion_dir / "CHAMPION_SCHEDULE.csv"
     args.output_dir.mkdir(parents=True, exist_ok=True)
     database = Path("/tmp/m2_optimizer_comparison.sqlite")
-    index = WindowIndex.build(database, CACHE / "C_optical/windows.csv", PRIORITY)
+    index = WindowIndex.build(database, CACHE / "windows.csv", PRIORITY)
     results = []
     try:
         for mode in ("fast_local", "hybrid"):
-            request = OptimizationRequest(champion, mode, args.budget, args.seed,
+            request = OptimizationRequest(args.schedule, mode, args.budget, args.seed,
                 args.output_dir, f"{mode}_{int(args.budget)}s_seed{args.seed}",
                 stagnation_s=args.stagnation_seconds)
             results.append(optimize_schedule(request, index))

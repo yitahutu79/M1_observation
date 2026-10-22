@@ -30,7 +30,7 @@ class WindowIndex:
         con.executescript("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA temp_store=MEMORY;"
                           "CREATE TABLE windows(line INTEGER PRIMARY KEY,target TEXT,raw_target TEXT,target_index INTEGER,"
                           "station INTEGER,start REAL,end REAL,duration REAL,priority TEXT);"
-                          "CREATE TABLE stats(target TEXT PRIMARY KEY,target_index INTEGER,raw_target TEXT,c_count INTEGER,"
+                          "CREATE TABLE stats(target TEXT PRIMARY KEY,target_index INTEGER,raw_target TEXT,d_count INTEGER,"
                           "legal_count INTEGER,station_count INTEGER,max_duration REAL,priority TEXT);")
         priorities = read_priority(priority_path)
         stats = {}
@@ -40,8 +40,8 @@ class WindowIndex:
                 target = canonical_target_id(row["target_id"])
                 duration = float(row["end_s"]) - float(row["start_s"])
                 item = stats.setdefault(target, {"target_index":int(row["target_index"]),"raw_target":row["target_id"],
-                    "c_count":0,"legal_count":0,"stations":set(),"max_duration":0.0,"priority":priorities[target]})
-                item["c_count"] += 1; item["max_duration"] = max(item["max_duration"], duration)
+                    "d_count":0,"legal_count":0,"stations":set(),"max_duration":0.0,"priority":priorities[target]})
+                item["d_count"] += 1; item["max_duration"] = max(item["max_duration"], duration)
                 if duration >= 120.0 - 1e-9:
                     item["legal_count"] += 1; item["stations"].add(int(row["station_id"]))
                     batch.append((line,target,row["target_id"],int(row["target_index"]),int(row["station_id"]),
@@ -50,7 +50,7 @@ class WindowIndex:
                         con.executemany("INSERT INTO windows VALUES (?,?,?,?,?,?,?,?,?)", batch); batch=[]
         if batch: con.executemany("INSERT INTO windows VALUES (?,?,?,?,?,?,?,?,?)", batch)
         con.executemany("INSERT INTO stats VALUES (?,?,?,?,?,?,?,?)", [
-            (target,item["target_index"],item["raw_target"],item["c_count"],item["legal_count"],
+            (target,item["target_index"],item["raw_target"],item["d_count"],item["legal_count"],
              len(item["stations"]),item["max_duration"],item["priority"]) for target,item in stats.items()])
         con.executescript("CREATE INDEX windows_target ON windows(target,start);"
                           "CREATE INDEX windows_station_time ON windows(station,start,end);"
@@ -78,7 +78,7 @@ def load_schedule(path: Path) -> list[dict]:
     with path.open(encoding="utf-8",newline="") as handle:
         for row in csv.DictReader(handle):
             item=dict(row)
-            for key in ("target_index","station_id","visit_number","source_c_line"): item[key]=int(item[key])
+            for key in ("target_index","station_id","visit_number","source_d_line"): item[key]=int(item[key])
             for key in ("start_s","end_s","duration_s","score","source_window_start_s","source_window_end_s"):
                 item[key]=float(item[key])
             rows.append(item)
@@ -88,6 +88,7 @@ def load_schedule(path: Path) -> list[dict]:
 class MutableSchedule:
     def __init__(self, tasks: list[dict], window_index: WindowIndex, rules, algorithm: str):
         self.rules=rules; self.index=window_index; self.algorithm=algorithm
+        self.coverage_floor=len({task["canonical_target_id"] for task in tasks})
         self.calendars={station:[] for station in range(1,11)}
         self.targets=defaultdict(list)
         for task in tasks: self.restore(dict(task))
@@ -152,7 +153,7 @@ class MutableSchedule:
               "canonical_target_id":target,"target_index":window["target_index"],"station_id":window["station"],
               "start_s":start,"end_s":start+duration,"duration_s":duration,"priority":window["priority"],
               "score":observation_score(window["priority"],duration,self.rules),"visit_number":0,
-              "source_c_line":window["line"],"source_window_start_s":window["start"],"source_window_end_s":window["end"]}
+              "source_d_line":window["line"],"source_window_start_s":window["start"],"source_window_end_s":window["end"]}
         self.calendars[window["station"]].insert(pos,task)
         visits=self.targets[target];vpos=bisect.bisect_right([x["start_s"] for x in visits],start);visits.insert(vpos,task)
         return task
@@ -171,7 +172,7 @@ class MutableSchedule:
         changes=[]
         all_tasks=sorted([x for tasks in self.calendars.values() for x in tasks],key=lambda x:(x["station_id"],x["start_s"]))
         for task in all_tasks:
-            window=self.index.window_by_line(task["source_c_line"])
+            window=self.index.window_by_line(task["source_d_line"])
             station=self.calendars[task["station_id"]];pos=station.index(task)
             latest=window["end"]
             if pos+1<len(station):

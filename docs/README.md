@@ -1,7 +1,8 @@
 # Documentation Map
 
-This directory groups the accepted project documentation by purpose. Start with the repository
-`README.md` for the project overview and `RUNBOOK.md` for reproducible commands.
+This directory groups current guidance and preserved historical evidence. Start with the repository
+`README.md` for current status and `RUNBOOK.md` for reproducible commands. The active horizon is
+2026-08-01 through 2026-08-07 UTC; October cache and schedule reports are historical only.
 
 ## Rules
 
@@ -9,15 +10,18 @@ This directory groups the accepted project documentation by purpose. Start with 
 
 ## M1: visibility windows
 
-- `m1/M1_RESULTS_README.md`: accepted M1 v2 metrics and validation scope.
-- `m1/M1_FORMAL_DATA_MANIFEST.md`: formal-cache identity and out-of-band data instructions.
+- `m1/M1_AUGUST_REBUILD_STATUS.md`: current August rebuild progress and validation gates.
+- `m1/M1_RESULTS_README.md`: immutable October M1 v2 metrics, explicitly marked historical.
+- `m1/M1_FORMAL_DATA_MANIFEST.md`: October formal-cache identity and historical data instructions.
 
-The full M1 v2 cache is intentionally excluded from ordinary Git history.
+The full October M1 v2 cache is intentionally excluded from ordinary Git history and is not the current planning input.
 
 ## M2: scheduling and optimization
 
-- `m2/M2_RULES_CONFIRMED.md`: implemented scheduling and scoring rules.
-- `m2/M2_REVISED_BASELINES.md`: confirmed baselines.
+Older M2 baselines, champion metrics, MILP comparisons, and team-recovery results were generated for the October horizon and pre-corrected data. Keep them as historical records. The active scheduler, Referee, and unified optimizer now use only the hash-pinned August refined D layer. A 10-target smoke baseline passed; a full August schedule and champion have not yet been generated.
+
+- `m2/M2_RULES_CONFIRMED.md`: confirmed scheduling rules and active August D input.
+- `m2/M2_REVISED_BASELINES.md`: baseline algorithm definitions; older numeric results remain historical.
 - `m2/M2_BOTTLENECK_ANALYSIS.md`: uncovered-target and optimizer bottleneck analysis.
 - `m2/M2_OPTIMIZER_INTERFACE.md`: unified Fast Local, MILP rebuild, and Hybrid interface.
 - `m2/M2_OPTIMIZER_COMPARISON.md`: fixed-budget optimizer comparison.
@@ -26,8 +30,7 @@ The full M1 v2 cache is intentionally excluded from ordinary Git history.
 - `m2/M2_EXPERIMENT_INDEX.csv`: compact index from each experiment to its local raw evidence.
 - Other files in `m2/` preserve the MILP, neighborhood, and MILP-LNS experiment evidence.
 
-The accepted champion identity is stored in `../m2_results/M2_CURRENT_CHAMPION.json`. The complete
-competition-derived schedule is distributed only through an authorized channel.
+October champion and experiment identities are historical only. No current August champion exists until a full D-based baseline and optimization run complete.
 
 ## Team comparison
 
@@ -36,6 +39,8 @@ competition-derived schedule is distributed only through an authorized channel.
 - `team/TEAM_INTEGRATION_PLAN.md`: verified integration options and boundaries.
 
 ## FAMOU handoff
+
+The current archived FAMOU bundle was assembled for the October horizon and must not be sent as the current contest package. Rebuild the bundle only after the August M1/D cache and a new M2 baseline have been validated.
 
 - `famou/FAMOU_TASK.md`: autonomous optimization assignment and acceptance gate.
 - `famou/FAMOU_UPLOAD_MANIFEST.md`: required, recommended, and optional bundle contents.

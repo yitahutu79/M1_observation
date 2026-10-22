@@ -1,9 +1,9 @@
 {
-  "schema_version": "m2-confirmed-rules-1.0",
-  "official_cache": "m1_validation/formal_20261001_v2",
+  "schema_version": "m2-august-2026-d-refined-v2-1.2",
+  "candidate_status": "AUGUST_D_REFINED_V2_ACTIVE_FAIL_CLOSED",
   "priority_file": "data/优先级.zip",
-  "planning_start_utc": "2026-10-01T00:00:00+00:00",
-  "planning_end_utc": "2026-10-07T00:00:00+00:00",
+  "planning_start_utc": "2026-08-01T00:00:00+00:00",
+  "planning_end_utc": "2026-08-07T00:00:00+00:00",
   "minimum_observation_s": 120.0,
   "maximum_observation_s": 240.0,
   "different_target_switch_s": 30.0,
@@ -21,5 +21,17 @@
     "score_weight": 0.5,
     "score_normalizer": "sum_priority_weights_times_max_three_visits"
   },
-  "numeric_tolerance_s": 1e-6
+  "numeric_tolerance_s": 1e-06,
+  "candidate_layer": "D_illumination_refined_v2",
+  "candidate_variant": "finite_sun_conical_umbra_adaptive_gap_refinement_1ms",
+  "candidate_windows_sha256": "002b2db8927a035822bb58067e76faa67f5b3746c95d64bdcd4f18335e7de165",
+  "candidate_window_count": 622882,
+  "candidate_data_directory": "m1_validation/formal_20260801_candidate/D_illumination_refined_v2",
+  "time_scale": "UTC",
+  "candidate_manifest_sha256": "7a441bc6e1a2a68078d7abf4acbe0ca4f3624f857e40a83e417e8e51f871046a",
+  "tle_path": "data/轨道.txt",
+  "ephemeris_path": "data/ephemeris/de421.bsp",
+  "referee_sunlight_sample_step_s": 1.0,
+  "referee_sunlight_model": "independent_skyfield_finite_sun_conical_umbra",
+  "source_cache_root": "m1_validation/formal_20260801_candidate"
 }

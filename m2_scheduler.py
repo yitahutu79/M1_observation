@@ -1,13 +1,14 @@
-"""M2 static six-day scheduling baselines over the accepted M1 v2 cache.
+"""August 2026 M2 static scheduling baselines over the refined D layer.
 
 This module constructs schedules. It does not certify them; m2_referee.py
-independently reloads every cited C window and checks the confirmed rules.
+independently reloads every cited D window and checks the confirmed rules.
 """
 from __future__ import annotations
 
 import bisect
 import csv
 import json
+import hashlib
 import math
 import sys
 import time
@@ -103,20 +104,77 @@ def read_statuses(path: Path, target_limit: int) -> dict[int, dict]:
     return statuses
 
 
-def validate_cache_identity(cache: Path):
-    if cache.name != "formal_20261001_v2":
-        raise ValueError("M2 accepts only formal_20261001_v2")
-    manifest = json.loads((cache / "C_optical/manifest.json").read_text(encoding="utf-8"))
-    if manifest.get("layer") != "C_optical" or manifest.get("window_count") != 1655169:
-        raise ValueError("unexpected formal C manifest")
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def validate_cache_identity(cache: Path, config_path: Path):
+    """Fail closed unless this is the exact configured August refined-D input."""
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    expected_dir = Path(config["candidate_data_directory"])
+    if not expected_dir.is_absolute():
+        expected_dir = config_path.resolve().parent / expected_dir
+    if cache.resolve() != expected_dir.resolve():
+        raise ValueError(f"M2 cache must be configured D directory: {expected_dir}")
+    manifest_path = cache / "manifest.json"
+    windows_path = cache / "windows.csv"
+    if not manifest_path.is_file() or not windows_path.is_file():
+        raise FileNotFoundError("configured refined D manifest/windows are missing; C fallback is prohibited")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("layer") != "D_illumination_refined" or manifest.get("schema_version") != "m1-illumination-gap-refinement-aug2026-2.0":
+        raise ValueError("unexpected D candidate manifest/schema")
+    if manifest.get("windows_sha256") != config.get("candidate_windows_sha256"):
+        raise ValueError("D windows hash in config does not match D manifest")
+    if file_sha256(windows_path) != manifest.get("windows_sha256"):
+        raise ValueError("D windows file hash mismatch")
+    if file_sha256(manifest_path) != config.get("candidate_manifest_sha256"):
+        raise ValueError("D manifest file hash does not match configured identity")
+    planning = manifest.get("planning", {})
+    if (planning.get("start_utc") != config.get("planning_start_utc") or
+            planning.get("end_utc") != config.get("planning_end_utc") or
+            planning.get("time_scale") != config.get("time_scale")):
+        raise ValueError("D planning interval/time scale differs from M2 config")
+    base = cache.parent
+    c_manifest_path = base / "C_optical/manifest.json"
+    c_windows_path = base / "C_optical/windows.csv"
+    if not c_manifest_path.is_file() or not c_windows_path.is_file():
+        raise FileNotFoundError("D source C provenance is missing")
+    c_manifest = json.loads(c_manifest_path.read_text(encoding="utf-8"))
+    if (file_sha256(c_windows_path) != manifest.get("source_C_sha256") or
+            c_manifest.get("windows_sha256") != manifest.get("source_C_sha256")):
+        raise ValueError("D source C hash does not match its adjacent cache")
+    a_manifest_path = base / "A_orbit/manifest.json"
+    a_status_path = base / "A_orbit/target_status.csv"
+    a_manifest = json.loads(a_manifest_path.read_text(encoding="utf-8"))
+    if file_sha256(a_manifest_path) != c_manifest.get("dependencies", {}).get("A_manifest_sha256"):
+        raise ValueError("C source does not depend on the adjacent A manifest")
+    if file_sha256(a_status_path) != a_manifest.get("target_status_sha256"):
+        raise ValueError("A target-status table hash mismatch")
+    priority_path = Path(config["priority_file"])
+    if not priority_path.is_absolute():
+        priority_path = config_path.resolve().parent / priority_path
+    if file_sha256(priority_path) != c_manifest.get("priority_file_sha256"):
+        raise ValueError("priority file hash differs from the M1 candidate source")
+    for field, configured_path in (("tle_sha256", config["tle_path"]),
+                                   ("ephemeris_sha256", config["ephemeris_path"])):
+        source_path = Path(configured_path)
+        if not source_path.is_absolute():
+            source_path = config_path.resolve().parent / source_path
+        if file_sha256(source_path) != manifest.get(field):
+            raise ValueError(f"{field} differs from the D cache source")
+    return manifest
 
 
 def iter_target_windows(cache: Path, priorities: dict[str, str], target_limit: int,
                         allowed_indices: set[int], priority_filter: str | None = None) -> Iterator[tuple[int, list[dict]]]:
-    """Stream C and yield one target at a time; never load the million-row cache."""
+    """Stream D and yield one target at a time; never load the full cache."""
     current_index = None
     group: list[dict] = []
-    with (cache / "C_optical/windows.csv").open(encoding="utf-8", newline="") as handle:
+    with (cache / "windows.csv").open(encoding="utf-8", newline="") as handle:
         for line_number, row in enumerate(csv.DictReader(handle), 2):
             index = int(row["target_index"])
             if index >= target_limit:
@@ -132,9 +190,13 @@ def iter_target_windows(cache: Path, priorities: dict[str, str], target_limit: i
             priority = priorities.get(canonical)
             if priority is None:
                 raise ValueError(f"priority missing for target {canonical}")
+            if row.get("illumination_status") != "sunlit":
+                raise ValueError(f"D row {line_number} is not labeled sunlit")
             if priority_filter and priority != priority_filter:
                 continue
             start_s, end_s = float(row["start_s"]), float(row["end_s"])
+            if not (math.isfinite(start_s) and math.isfinite(end_s) and 1 <= int(row["station_id"]) <= 10 and end_s > start_s):
+                raise ValueError(f"invalid D interval or station at row {line_number}")
             if end_s - start_s < 120.0 - 1e-9:
                 continue
             group.append({
@@ -154,7 +216,7 @@ def iter_target_windows(cache: Path, priorities: dict[str, str], target_limit: i
 def audit_candidate_rows(cache: Path, priorities: dict[str, str], target_limit: int) -> dict:
     count = mismatch = 0
     target_ids = set()
-    with (cache / "C_optical/windows.csv").open(encoding="utf-8", newline="") as handle:
+    with (cache / "windows.csv").open(encoding="utf-8", newline="") as handle:
         for row in csv.DictReader(handle):
             index = int(row["target_index"])
             if index >= target_limit:
@@ -169,7 +231,7 @@ def audit_candidate_rows(cache: Path, priorities: dict[str, str], target_limit: 
             target_ids.add(canonical)
             mismatch += row["priority"] != priority
     return {"candidate_windows_ge_120": count, "candidate_targets": len(target_ids),
-            "c_priority_mismatch_rows": mismatch}
+            "d_priority_mismatch_rows": mismatch}
 
 
 def _transition(left_target: str | None, right_target: str, rules: Rules) -> float:
@@ -240,7 +302,7 @@ def insert_observation(windows: list[dict], calendars: dict[int, list[dict]], ta
         "start_s": start_s, "end_s": start_s + duration, "duration_s": duration,
         "priority": window["priority"], "score": observation_score(window["priority"], duration, rules),
         "visit_number": len(target_tasks[target]) + 1,
-        "source_c_line": window["source_line"],
+        "source_d_line": window["source_line"],
         "source_window_start_s": window["window_start_s"],
         "source_window_end_s": window["window_end_s"],
     }
@@ -266,14 +328,22 @@ def run_phase(cache: Path, priorities: dict[str, str], target_limit: int, allowe
 
 
 def schedule_baseline(cache: Path, priority_path: Path, config_path: Path, target_limit: int, algorithm: str):
-    validate_cache_identity(cache)
+    validate_cache_identity(cache, config_path)
+    cache_planning = json.loads((cache / "manifest.json").read_text(encoding="utf-8")).get("planning")
+    requested_planning = json.loads(config_path.read_text(encoding="utf-8"))
+    requested_planning = {"start_utc": requested_planning.get("planning_start_utc"),
+                          "end_utc": requested_planning.get("planning_end_utc")}
+    if cache_planning and all(requested_planning.values()):
+        if (cache_planning.get("start_utc") != requested_planning["start_utc"] or
+                cache_planning.get("end_utc") != requested_planning["end_utc"]):
+            raise ValueError("cache planning horizon does not match the active M2 configuration")
     rules = load_rules(config_path)
     if rules.repeat_observation_rule != "cumulative_after_48h":
         raise ValueError("confirmed repeat rule is required")
     if rules.duration_score_rule != "linear_60_to_100":
         raise ValueError("confirmed linear duration score rule is required")
     priorities = read_priority(priority_path)
-    statuses = read_statuses(cache / "A_orbit/target_status.csv", target_limit)
+    statuses = read_statuses(cache.parent / "A_orbit/target_status.csv", target_limit)
     allowed = {index for index, row in statuses.items() if row["status"] == "has_windows"}
     calendars = {station: [] for station in range(1, 11)}
     target_tasks: dict[str, list[dict]] = defaultdict(list)
@@ -316,7 +386,7 @@ def schedule_baseline(cache: Path, priority_path: Path, config_path: Path, targe
 
 SCHEDULE_FIELDS = [
     "task_id", "algorithm", "target_id", "canonical_target_id", "target_index", "station_id",
-    "start_s", "end_s", "duration_s", "priority", "score", "visit_number", "source_c_line",
+    "start_s", "end_s", "duration_s", "priority", "score", "visit_number", "source_d_line",
     "source_window_start_s", "source_window_end_s",
 ]
 

@@ -1,7 +1,8 @@
-"""Small-neighborhood MILP feasibility study for the accepted M2 schedule."""
+"""HISTORICAL October M2 MILP feasibility study; no current August candidate yet."""
 from __future__ import annotations
 
 import bisect
+import argparse
 import csv
 import hashlib
 import json
@@ -21,13 +22,12 @@ from m2_referee import referee
 from m2_scheduler import load_rules, observation_score, read_priority, write_schedule
 
 ROOT=Path(__file__).resolve().parent
-CACHE=ROOT/"m1_validation/formal_20261001_v2"
+CACHE=ROOT / json.loads((ROOT/"m2_config.json").read_text(encoding="utf-8"))["candidate_data_directory"]
 CONFIG=ROOT/"m2_config.json"
 PRIORITY=ROOT/"data/优先级.zip"
 BASE=ROOT/"m2_results/full/M2_BEST_SCHEDULE.csv"
 OUT=ROOT/"local_archive/m2_results/math_opt"
 DB=Path("/tmp/m2_math_opt_windows.sqlite")
-HARD_COVERAGE=9849
 SOLVE_SECONDS=5.0
 RANDOM_SEED=20261015
 
@@ -45,7 +45,7 @@ class Candidate:
         return {"task_id":"","algorithm":algorithm,"target_id":self.raw_target,
             "canonical_target_id":self.target,"target_index":self.target_index,"station_id":self.station,
             "start_s":self.start,"end_s":self.end,"duration_s":self.duration,"priority":self.priority,
-            "score":self.score,"visit_number":0,"source_c_line":self.source_line,
+            "score":self.score,"visit_number":0,"source_d_line":self.source_line,
             "source_window_start_s":self.window_start,"source_window_end_s":self.window_end}
 
 
@@ -115,7 +115,7 @@ def make_candidates(neighborhood,all_tasks,index,rules):
         originals_by_target[task["canonical_target_id"]].append(task)
         c=Candidate(task["canonical_target_id"],task["target_id"],task["target_index"],task["station_id"],
             task["start_s"],task["end_s"],task["duration_s"],task["priority"],task["score"],
-            task["source_c_line"],task["source_window_start_s"],task["source_window_end_s"],True)
+            task["source_d_line"],task["source_window_start_s"],task["source_window_end_s"],True)
         if c.key() not in seen:seen.add(c.key());origin_keys.append(c.key());candidates.append(c)
     band_start=max(0.0,neighborhood["band_start"]-1800.0)
     band_end=min(6*86400.0,neighborhood["band_end"]+1800.0)
@@ -230,51 +230,9 @@ def assemble(fixed,candidates,selected,algorithm):
 
 
 def main():
-    OUT.mkdir(parents=True,exist_ok=True);rules=load_rules(CONFIG);read_priority(PRIORITY)
-    base_tasks=load_schedule(BASE);base_hash=sha256(BASE);base_score=sum(x["score"] for x in base_tasks)
-    if len({x["canonical_target_id"] for x in base_tasks})!=HARD_COVERAGE:raise RuntimeError("base coverage changed")
-    if DB.exists():DB.unlink()
-    index=WindowIndex.build(DB,CACHE/"C_optical/windows.csv",PRIORITY)
-    rows=[];examples=[]
-    for number,n in enumerate(select_neighborhoods(base_tasks),1):
-        candidates,origins,required,fixed=make_candidates(n,base_tasks,index,rules)
-        pairs=conflict_pairs(candidates,rules)
-        original_local=sum(candidates[i].score for i in origins)
-        milp_selected,milp_info=solve_milp(candidates,pairs,required,SOLVE_SECONDS)
-        heur_selected,heur_info=heuristic(candidates,pairs,required,origins,SOLVE_SECONDS,RANDOM_SEED+number)
-        results=[]
-        for method,selected,info in (("milp_highs",milp_selected,milp_info),("local_search",heur_selected,heur_info)):
-            tasks=assemble(fixed,candidates,selected,f"math_{method}_{number}")
-            path=OUT/f"{n['name']}_{method}.csv";write_schedule(path,tasks)
-            check=referee(path,CACHE,PRIORITY,CONFIG,10000,OUT/f"{n['name']}_{method}_violations.csv")
-            accepted=check["legal"] and check["unique_covered_targets"]==HARD_COVERAGE and check["total_score"]>=base_score-1e-8
-            result={"method":method,"selected":len(selected),"info":info,"referee":check,"accepted":accepted,"path":str(path)}
-            results.append(result)
-            rows.append({"neighborhood":n["name"],"adjustable_tasks":len(n["tasks"]),
-                "tight_gaps_le_35s":n["tight_gap_count"],"short_tasks":n["short_task_count"],
-                "candidate_count":len(candidates),"conflict_pair_count":len(pairs),"required_local_targets":len(required),
-                "method":method,"time_limit_s":SOLVE_SECONDS,"solve_status":info.get("status","heuristic"),
-                "solve_message":info.get("message","deterministic randomized exchange"),"elapsed_s":info["elapsed_s"],
-                "local_score":info["feasible_local_score"],"local_upper_bound":info.get("upper_bound_local_score",""),
-                "optimality_gap":info.get("mip_gap",""),"selected_candidates":len(selected),
-                "global_score":check["total_score"],"score_gain_vs_base":0.0 if abs(check["total_score"]-base_score)<1e-8 else check["total_score"]-base_score,
-                "coverage":check["unique_covered_targets"],"referee_violations":check["violation_count"],
-                "accepted":accepted,"random_seed":RANDOM_SEED+number if method=="local_search" else ""})
-        examples.append({"neighborhood":{k:v for k,v in n.items() if k!="tasks"},
-            "adjustable_task_count":len(n["tasks"]),"original_local_score":original_local,
-            "candidate_count":len(candidates),"conflict_pair_count":len(pairs),"required_targets":len(required),
-            "milp":{k:v for k,v in milp_info.items()},"heuristic":heur_info,
-            "milp_global_score":results[0]["referee"]["total_score"],"heuristic_global_score":results[1]["referee"]["total_score"],
-            "milp_accepted":results[0]["accepted"],"heuristic_accepted":results[1]["accepted"]})
-    fields=list(rows[0]);
-    with (ROOT/"M2_MATH_OPT_COMPARISON.csv").open("w",encoding="utf-8",newline="") as f:
-        w=csv.DictWriter(f,fieldnames=fields,lineterminator="\n");w.writeheader();w.writerows(rows)
-    metadata={"base_schedule":str(BASE),"base_sha256":base_hash,"base_score":base_score,
-        "hard_coverage":HARD_COVERAGE,"solver":"scipy.optimize.milp / HiGHS","ortools_installed":False,
-        "solve_time_limit_s_per_method_per_neighborhood":SOLVE_SECONDS,"random_seed":RANDOM_SEED,
-        "examples":examples}
-    (OUT/"results.json").write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+"\n")
-    index.close();print(json.dumps(metadata,ensure_ascii=False,indent=2))
+    parser = argparse.ArgumentParser(description="Archived October experiment runner; unavailable for current August D results.")
+    parser.parse_args()
+    raise SystemExit('Archived October MILP result runner is disabled. Use the August D-based baseline and D-aware unified optimizer.')
 
 
 if __name__=="__main__":main()

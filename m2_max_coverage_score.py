@@ -1,4 +1,4 @@
-"""Score maximization with 9,849-target coverage as a hard constraint."""
+"""HISTORICAL October D score maximizer; its 9,849-target bound is not an August result."""
 from __future__ import annotations
 
 import argparse
@@ -16,15 +16,13 @@ from m2_referee import referee
 from m2_scheduler import load_rules, observation_score, read_priority, write_schedule
 
 ROOT=Path(__file__).resolve().parent
-CACHE=ROOT/"m1_validation/formal_20261001_v2"
+CACHE=ROOT / json.loads((ROOT/"m2_config.json").read_text(encoding="utf-8"))["candidate_data_directory"]
 CONFIG=ROOT/"m2_config.json"
 PRIORITY=ROOT/"data/优先级.zip"
 LOCAL=ROOT/"local_archive/m2_results/local_search"
 BASE=ROOT/"local_archive/m2_results/results_confirmed/targets_10000"
 OUT=ROOT/"local_archive/m2_results/max_coverage_score"
 DB=Path("/tmp/m2_max_coverage_windows.sqlite")
-HARD_COVERAGE=9849
-BASELINE_SCORE=28416.395663980275
 
 SEEDS={
     "coverage_strict": LOCAL/"coverage_strict_schedule.csv",
@@ -56,8 +54,9 @@ def snapshot_initial():
     if not copy.exists(): shutil.copy2(source,copy)
     if sha256(copy)!=source_hash: raise RuntimeError("initial coverage-strict snapshot hash mismatch")
     manifest={"source":str(source.relative_to(ROOT)),"snapshot":str(copy.relative_to(ROOT)),
-        "sha256":source_hash,"bytes":source.stat().st_size,"immutable_baseline_score":BASELINE_SCORE,
-        "hard_coverage":HARD_COVERAGE}
+        "sha256":source_hash,"bytes":source.stat().st_size,
+        "immutable_baseline_score":sum(row["score"] for row in load_schedule(source)),
+        "hard_coverage":len({row["canonical_target_id"] for row in load_schedule(source)})}
     (OUT/"INITIAL_COVERAGE_STRICT_SHA256.json").write_text(json.dumps(manifest,indent=2)+"\n")
     return manifest
 
@@ -90,13 +89,13 @@ def repair_seed(name:str,index:WindowIndex,rules,required:list[str]):
             original=dict(blocker);schedule.remove(blocker)
             new=schedule.add_target(target,120.0,"earliest")
             moved=schedule.add_target(original["canonical_target_id"],120.0,"earliest",
-                                      frozenset({original["source_c_line"]})) if new else None
+                                      frozenset({original["source_d_line"]})) if new else None
             if new and moved:
                 relocated+=1;break
             if moved:schedule.remove(moved)
             if new:schedule.remove(new)
             schedule.restore(original)
-    ok=covered(schedule)==HARD_COVERAGE
+    ok=covered(schedule)==schedule.coverage_floor
     return schedule,{"seed":name,"repair_elapsed_s":time.perf_counter()-started,
         "direct_additions":direct,"relocations":relocated,"fallback":False,
         "coverage":covered(schedule),"feasible":ok}
@@ -137,7 +136,7 @@ def try_relocate(schedule:MutableSchedule,rng:random.Random,tracker:Tracker):
         new=schedule.add_target(old["canonical_target_id"],duration,"score")
         if new:break
     gain=(new["score"]-old_score) if new else 0.0
-    ok=bool(new and gain>1e-10 and covered(schedule)==HARD_COVERAGE)
+    ok=bool(new and gain>1e-10 and covered(schedule)==schedule.coverage_floor)
     if not ok:
         if new:schedule.remove(new)
         schedule.restore(old);gain=0.0
@@ -159,7 +158,7 @@ def try_repeat_insert(schedule:MutableSchedule,rng:random.Random,tracker:Tracker
             new=schedule.add_target(target,duration,"score")
             if new:break
         if new:break
-    gain=new["score"] if new else 0.0;ok=bool(new and covered(schedule)==HARD_COVERAGE)
+    gain=new["score"] if new else 0.0;ok=bool(new and covered(schedule)==schedule.coverage_floor)
     if not ok and new:schedule.remove(new)
     tracker.attempt("legal_repeat_insertion",time.perf_counter()-began,ok,gain if ok else 0.0)
     if ok:accept_point(tracker,schedule,"legal_repeat_insertion")
@@ -179,7 +178,7 @@ def try_repeat_exchange(schedule:MutableSchedule,rng:random.Random,tracker:Track
             if new:break
         if new:break
     gain=(new["score"]-original["score"]) if new else 0.0
-    ok=bool(new and gain>1e-10 and covered(schedule)==HARD_COVERAGE)
+    ok=bool(new and gain>1e-10 and covered(schedule)==schedule.coverage_floor)
     if not ok:
         if new:schedule.remove(new)
         schedule.restore(original);gain=0.0
@@ -202,7 +201,7 @@ def try_two_task_exchange(schedule:MutableSchedule,rng:random.Random,tracker:Tra
         if new:additions.append(new)
         else:break
     old_score=sum(x["score"] for x in originals);new_score=sum(x["score"] for x in additions)
-    ok=len(additions)==2 and new_score>old_score+1e-10 and covered(schedule)==HARD_COVERAGE
+    ok=len(additions)==2 and new_score>old_score+1e-10 and covered(schedule)==schedule.coverage_floor
     if not ok:
         for task in additions:schedule.remove(task)
         for original in originals:schedule.restore(original)
@@ -266,7 +265,7 @@ def try_adjacent_score_transfer(schedule:MutableSchedule,rng:random.Random,track
             gain=left["score"]+right["score"]-old
         else:gain=0.0
     else:gain=0.0
-    ok=gain>1e-10 and covered(schedule)==HARD_COVERAGE
+    ok=gain>1e-10 and covered(schedule)==schedule.coverage_floor
     tracker.attempt("adjacent_time_score_transfer",time.perf_counter()-began,ok,gain if ok else 0.0)
     if ok:accept_point(tracker,schedule,"adjacent_time_score_transfer")
 
@@ -294,59 +293,9 @@ def optimize(schedule:MutableSchedule,seed:str,budget:float,random_seed:int,prio
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument("--budgets",default="30,120,300");args=parser.parse_args()
-    budgets=[float(x) for x in args.budgets.split(",")];manifest=snapshot_initial()
-    if sha256(SEEDS["coverage_strict"])!=manifest["sha256"]:raise RuntimeError("baseline changed")
-    rules=load_rules(CONFIG);priorities=read_priority(PRIORITY)
-    if DB.exists():DB.unlink()
-    index=WindowIndex.build(DB,CACHE/"C_optical/windows.csv",PRIORITY)
-    strict_rows=load_schedule(SEEDS["coverage_strict"]);required=sorted({x["canonical_target_id"] for x in strict_rows},key=int)
-    if len(required)!=HARD_COVERAGE:raise RuntimeError("unexpected strict coverage")
-    curve=[];gains=[];runs=[];best=None;best_score=BASELINE_SCORE
-    for budget in budgets:
-        per_seed=budget/len(SEEDS)
-        for seed_number,(seed,_) in enumerate(SEEDS.items()):
-            schedule,repair=repair_seed(seed,index,rules,required)
-            run=f"{seed}_{int(budget)}s"
-            if covered(schedule)!=HARD_COVERAGE:
-                runs.append({"run":run,"seed":seed,"budget_s":budget,"per_seed_budget_s":per_seed,
-                    "repair":repair,"feasible":False});continue
-            schedule,tracker=optimize(schedule,seed,per_seed,20261001+int(budget)*100+seed_number,priorities,required)
-            tasks=schedule.finalize();path=OUT/f"{run}_schedule.csv";write_schedule(path,tasks)
-            validation=referee(path,CACHE,PRIORITY,CONFIG,10000,OUT/f"{run}_violations.csv")
-            final_score=validation["total_score"]
-            if not validation["legal"] or validation["unique_covered_targets"]!=HARD_COVERAGE:
-                raise RuntimeError(f"hard constraint or referee failure: {run}")
-            runrow={"run":run,"seed":seed,"budget_s":budget,"per_seed_budget_s":per_seed,
-                "random_seed":20261001+int(budget)*100+seed_number,"repair":repair,"feasible":True,
-                "final":validation,"gain_over_coverage_strict":final_score-BASELINE_SCORE,
-                "optimization_gain":final_score-tracker.start_score}
-            runs.append(runrow)
-            for point in tracker.curve:
-                point["run"]=run;point["budget_s"]=budget;point["per_seed_budget_s"]=per_seed
-            curve.extend(tracker.curve)
-            for operation,stat in tracker.stats.items():
-                gains.append({"run":run,"seed":seed,"budget_s":budget,"per_seed_budget_s":per_seed,
-                    "operation":operation,"attempt_count":stat["attempts"],"success_count":stat["successes"],
-                    "net_score_gain":stat["gain"],"operation_runtime_s":stat["runtime_s"]})
-            if final_score>best_score+1e-9:
-                best_score=final_score;best=(path,runrow)
-    if best is None:
-        best_path=SEEDS["coverage_strict"];best_validation=referee(best_path,CACHE,PRIORITY,CONFIG,10000,OUT/"best_violations.csv")
-        best_run="coverage_strict_unimproved"
-    else:
-        best_path,bestrow=best;best_validation=bestrow["final"];best_run=bestrow["run"]
-    current_path=ROOT/"m2_results/full/M2_BEST_SCHEDULE.csv"
-    current_path.parent.mkdir(parents=True,exist_ok=True)
-    shutil.copy2(best_path,current_path)
-    if sha256(best_path)!=sha256(current_path):raise RuntimeError("best schedule copy failed")
-    csv_write(ROOT/"M2_OPTIMIZATION_CURVE.csv",curve)
-    csv_write(ROOT/"M2_OPERATION_GAIN.csv",gains)
-    result={"initial":manifest,"budgets_are_total_across_three_seeds":True,"runs":runs,
-        "best_run":best_run,"best_schedule_sha256":sha256(current_path),
-        "best":best_validation,"baseline_score":BASELINE_SCORE,"score_gain":best_validation["total_score"]-BASELINE_SCORE}
-    (OUT/"results.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n")
-    index.close();print(json.dumps({"best_run":best_run,"best":best_validation,"gain":result["score_gain"]},indent=2))
+    parser = argparse.ArgumentParser(description="Archived October experiment runner; unavailable for current August D results.")
+    parser.parse_args()
+    raise SystemExit('Archived October score-maximization runner is disabled. Its 9,849-target seed is not an August objective; use the D-aware unified optimizer with a D-validated seed.')
 
 
 if __name__=="__main__":main()

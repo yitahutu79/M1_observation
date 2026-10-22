@@ -4,7 +4,7 @@
 
 | Item | Confirmed rule |
 |---|---|
-| Planning horizon | 2026-10-01 00:00:00 through 2026-10-07 00:00:00, six days |
+| Planning horizon | **Current:** 2026-08-01 00:00:00 through 2026-08-07 00:00:00 UTC, six days (updated by the organizer on 2026-10-21) |
 | Time scale | Current formal implementation uses UTC; configuration remains explicit |
 | Scale | 10,000 satellite targets and 10 ground stations |
 | Orbit propagation | Contestants compute propagation; Skyfield is used as an independent reference |
@@ -40,4 +40,4 @@ The organizer has not supplied the normalization formula that converts raw indep
 
 ## Implementation-specific facts, not contest rules
 
-The accepted M1 v2 run found 133 propagation-anomaly targets and 9,867 targets with A-layer windows. These are outcomes of the supplied input data and accepted computation, not general competition rules. The current hard M2 coverage of 9,849 is the best validated solution constraint used by the optimizer, not an organizer-mandated coverage threshold.
+The October-horizon M1 v2 run found 133 propagation-anomaly targets and 9,867 targets with A-layer windows; its M2 search used a hard coverage threshold of 9,849. These are historical outcomes and experiment constraints, not rules or current August results. The August target status, window counts, attainable coverage, and optimization baseline must be regenerated.

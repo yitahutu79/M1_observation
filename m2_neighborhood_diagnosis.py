@@ -1,6 +1,7 @@
-"""Targeted repeat-chain candidate and neighborhood diagnosis for M2."""
+"""HISTORICAL October M2 neighborhood diagnosis; results are not an August baseline."""
 from __future__ import annotations
 
+import argparse
 import bisect
 import csv
 import hashlib
@@ -17,13 +18,12 @@ from m2_referee import referee
 from m2_scheduler import load_rules, observation_score, read_priority, write_schedule
 
 ROOT=Path(__file__).resolve().parent
-CACHE=ROOT/"m1_validation/formal_20261001_v2"
+CACHE=ROOT / json.loads((ROOT/"m2_config.json").read_text(encoding="utf-8"))["candidate_data_directory"]
 CONFIG=ROOT/"m2_config.json"
 PRIORITY=ROOT/"data/优先级.zip"
 BASE=ROOT/"m2_results/full/M2_BEST_SCHEDULE.csv"
 OUT=ROOT/"local_archive/m2_results/neighborhood_diagnosis"
 DB=Path("/tmp/m2_neighborhood_diagnosis.sqlite")
-HARD_COVERAGE=9849
 SOLVE_SECONDS=10.0
 TARGET_CASES=6
 
@@ -116,7 +116,7 @@ def enhanced_candidates(neighborhood,all_tasks,index,rules):
         original_by_target[task["canonical_target_id"]].append(task)
         c=Candidate(task["canonical_target_id"],task["target_id"],task["target_index"],task["station_id"],
             task["start_s"],task["end_s"],task["duration_s"],task["priority"],task["score"],
-            task["source_c_line"],task["source_window_start_s"],task["source_window_end_s"],True)
+            task["source_d_line"],task["source_window_start_s"],task["source_window_end_s"],True)
         if c.key() not in seen:seen.add(c.key());origin_keys.append(c.key());candidates.append(c)
     anchor_bands=[(max(0,a[1]-2400),min(6*86400.0,a[2]+2400)) for a in neighborhood["anchors"]]
     durations=set(float(x) for x in range(120,241,15))
@@ -169,50 +169,9 @@ def original_combo_audit(candidates,origins,adjustable,pairs):
 
 
 def main():
-    OUT.mkdir(parents=True,exist_ok=True);rules=load_rules(CONFIG);read_priority(PRIORITY)
-    tasks=load_schedule(BASE);base_hash=sha256(BASE);base_score=sum(x["score"] for x in tasks)
-    if len({x["canonical_target_id"] for x in tasks})!=HARD_COVERAGE:raise RuntimeError("base coverage changed")
-    if DB.exists():DB.unlink()
-    index=WindowIndex.build(DB,CACHE/"C_optical/windows.csv",PRIORITY)
-    cases=choose_repeat_cases(tasks,index,rules);rows=[];case_records=[]
-    for number,case in enumerate(cases,1):
-        neighborhood=build_targeted_neighborhood(case,tasks)
-        record={"case":neighborhood["name"],"focus_target":neighborhood["focus_target"],
-            "cross_station_chain":neighborhood["cross_station_chain"],"existing_visits":[
-                {"station":v["station_id"],"start_s":v["start_s"],"end_s":v["end_s"],"duration_s":v["duration_s"]}
-                for v in neighborhood["visits"]],"extra_window":neighborhood["extra_window"],
-            "extra_window_count":neighborhood["extra_window_count"],"duration_slack_s":neighborhood["duration_slack_s"],
-            "adjustable_tasks":len(neighborhood["tasks"]),"sets":{}}
-        for kind,builder in (("original",make_candidates),("enhanced",enhanced_candidates)):
-            candidates,origins,required,fixed=builder(neighborhood,tasks,index,rules)
-            pairs=conflict_pairs(candidates,rules);audit=original_combo_audit(candidates,origins,neighborhood["tasks"],pairs)
-            selected,info=solve_milp(candidates,pairs,required,SOLVE_SECONDS)
-            assembled=assemble(fixed,candidates,selected,f"diagnosis_{kind}_{number}")
-            path=OUT/f"{neighborhood['name']}_{kind}.csv";write_schedule(path,assembled)
-            check=referee(path,CACHE,PRIORITY,CONFIG,10000,OUT/f"{neighborhood['name']}_{kind}_violations.csv")
-            gain=check["total_score"]-base_score;gain=0.0 if abs(gain)<1e-8 else gain
-            accepted=check["legal"] and check["unique_covered_targets"]==HARD_COVERAGE and gain>=0
-            rows.append({"case":neighborhood["name"],"focus_target":neighborhood["focus_target"],
-                "cross_station_chain":neighborhood["cross_station_chain"],"adjustable_tasks":len(neighborhood["tasks"]),
-                "existing_chain_visits":len(neighborhood["visits"]),"extra_legal_repeat_windows":neighborhood["extra_window_count"],
-                "candidate_set":kind,"candidate_count":len(candidates),"origin_candidate_count":len(origins),
-                "original_combo_complete":audit["complete"],"original_combo_conflicts":audit["origin_conflicts"],
-                "conflict_pair_count":len(pairs),"required_local_targets":len(required),"solve_status":info["status"],
-                "solve_message":info["message"],"solve_elapsed_s":info["elapsed_s"],
-                "local_feasible_score":info["feasible_local_score"],"local_upper_bound":info["upper_bound_local_score"],
-                "optimality_gap":info["mip_gap"],"selected_candidates":len(selected),
-                "global_score":check["total_score"],"score_gain":gain,"coverage":check["unique_covered_targets"],
-                "referee_violations":check["violation_count"],"accepted":accepted})
-            record["sets"][kind]={"candidate_count":len(candidates),"conflict_pairs":len(pairs),"audit":audit,
-                "solve":info,"global_score":check["total_score"],"gain":gain,"coverage":check["unique_covered_targets"],
-                "violations":check["violation_count"],"accepted":accepted}
-        case_records.append(record)
-    with (ROOT/"M2_CANDIDATE_COMPARISON.csv").open("w",encoding="utf-8",newline="") as f:
-        w=csv.DictWriter(f,fieldnames=list(rows[0]),lineterminator="\n");w.writeheader();w.writerows(rows)
-    metadata={"base_sha256":base_hash,"base_score":base_score,"hard_coverage":HARD_COVERAGE,
-        "solver":"SciPy HiGHS MILP","time_limit_s":SOLVE_SECONDS,"cases":case_records}
-    (OUT/"results.json").write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+"\n")
-    index.close();print(json.dumps(metadata,ensure_ascii=False,indent=2))
+    parser = argparse.ArgumentParser(description="Archived October experiment runner; unavailable for current August D results.")
+    parser.parse_args()
+    raise SystemExit('Archived October neighborhood report runner is disabled. Use a fresh August D-based schedule before local experiments.')
 
 
 if __name__=="__main__":main()

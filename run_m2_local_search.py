@@ -1,6 +1,7 @@
-"""Diagnose M2 bottlenecks and run lightweight, referee-checked local search."""
+"""Archived October local-search experiment; kept for report traceability only."""
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import json
@@ -14,7 +15,7 @@ from m2_referee import referee
 from m2_scheduler import SCHEDULE_FIELDS, canonical_target_id, load_rules, observation_score, read_priority, write_schedule
 
 ROOT = Path(__file__).resolve().parent
-CACHE = ROOT / "m1_validation/formal_20261001_v2"
+CACHE = ROOT / json.loads((ROOT / "m2_config.json").read_text(encoding="utf-8"))["candidate_data_directory"]
 PRIORITY = ROOT / "data/优先级.zip"
 CONFIG = ROOT / "m2_config.json"
 BASE = ROOT / "local_archive/m2_results/results_confirmed/targets_10000"
@@ -42,7 +43,7 @@ def sha256(path: Path) -> str:
 
 def read_statuses() -> list[dict]:
     csv.field_size_limit(sys.maxsize)
-    with (CACHE/"A_orbit/target_status.csv").open(encoding="utf-8",newline="") as handle:
+    with (CACHE.parent/"A_orbit/target_status.csv").open(encoding="utf-8",newline="") as handle:
         rows=list(csv.DictReader(handle))
     for row in rows:
         row["target_index"]=int(row["target_index"])
@@ -153,7 +154,7 @@ def optimize(profile:dict,index:WindowIndex,uncovered:list[dict],priorities:dict
             schedule.remove(blocker)
             added=schedule.add_target(target,profile["duration"],"earliest")
             moved=schedule.add_target(original["canonical_target_id"],original["duration_s"],"earliest",
-                                      frozenset({original["source_c_line"]})) if added else None
+                                      frozenset({original["source_d_line"]})) if added else None
             if added and moved:
                 operation="station_migration" if moved["station_id"]!=old_station else "conflict_task_reschedule"
                 detail=(f"moved blocker {original['canonical_target_id']} from station {old_station} "
@@ -194,7 +195,7 @@ def optimize(profile:dict,index:WindowIndex,uncovered:list[dict],priorities:dict
 
     for task,delta in schedule.extend_all():
         record(ops,started,name,"duration_adjustment",task["canonical_target_id"],0,delta,task,
-               "extended within cited C window and next station/target constraints")
+               "extended within cited D window and next station/target constraints")
     tasks=schedule.finalize(); after=schedule.metrics()
     return tasks,ops,{"config":name,"seed":profile["seed"],"coverage_weight":profile["coverage_weight"],
         "score_weight":profile["score_weight"],"seed_metrics":before,"local_metrics":after,
@@ -212,67 +213,9 @@ def pareto(rows:list[dict]):
 
 
 def main():
-    OUT.mkdir(parents=True,exist_ok=True)
-    rules=load_rules(CONFIG); priorities=read_priority(PRIORITY); statuses=read_statuses()
-    started=time.perf_counter(); index=WindowIndex.build(INDEX,CACHE/"C_optical/windows.csv",PRIORITY)
-    index_elapsed=time.perf_counter()-started
-    first=load_schedule(BASE/"first_observation_first_schedule.csv")
-    hybrid=load_schedule(BASE/"coverage_score_hybrid_schedule.csv")
-    uncovered=diagnose_uncovered(index,statuses,priorities,first,rules)
-    hybrid_diag=hybrid_repeat_diagnosis(index,hybrid,rules)
-    all_ops=[]; summaries=[]; recovered=Counter()
-    for profile in PROFILES:
-        schedule_path=OUT/f"{profile['name']}_schedule.csv"
-        summary_path=OUT/f"{profile['name']}_summary.json"
-        operations_path=OUT/f"{profile['name']}_operations.csv"
-        if schedule_path.exists() and summary_path.exists() and operations_path.exists():
-            tasks=load_schedule(schedule_path)
-            with operations_path.open(encoding="utf-8",newline="") as handle:
-                ops=list(csv.DictReader(handle))
-            summary=json.loads(summary_path.read_text(encoding="utf-8"))
-            validation=summary["referee"]
-        else:
-            tasks,ops,summary=optimize(profile,index,uncovered,priorities,rules)
-            write_schedule(schedule_path,tasks)
-            violation_path=OUT/f"{profile['name']}_violations.csv"
-            validation=referee(schedule_path,CACHE,PRIORITY,CONFIG,10000,violation_path)
-            summary["referee"]=validation
-            summary_path.write_text(json.dumps(summary,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-            write_csv(operations_path,ops)
-        if not validation["legal"]: raise RuntimeError(f"{profile['name']} has {validation['violation_count']} violations")
-        covered={row["canonical_target_id"] for row in tasks}
-        for row in uncovered:
-            if row["canonical_target_id"] in covered: recovered[(row["canonical_target_id"],profile["name"])]+=1
-        all_ops.extend(ops); summaries.append(summary)
-    for row in uncovered:
-        configs=[profile["name"] for profile in PROFILES if recovered[(row["canonical_target_id"],profile["name"])]]
-        row["recovered_by_configs"]=";".join(configs)
-        if configs and row["uncovered_reason"]=="current_schedule_no_direct_insertion":
-            row["uncovered_reason"]="greedy_choice_recoverable_by_local_search"
-    write_csv(ROOT/"M2_UNCOVERED_TARGETS.csv",uncovered)
-    write_csv(OUT/"operations.csv",all_ops)
-
-    baseline=[]
-    for name in ("first_observation_first","total_score_first","coverage_score_hybrid"):
-        data=json.loads((BASE/f"{name}_summary.json").read_text())
-        result=data["referee"]
-        baseline.append({"solution":name,"source":"baseline","coverage":result["unique_covered_targets"],
-                         "score":result["total_score"],"tasks":result["task_count"],
-                         "repeats":result["repeated_observation_count"],"legal":result["legal"]})
-    candidates=baseline+[{
-        "solution":s["config"],"source":"local_search","coverage":s["referee"]["unique_covered_targets"],
-        "score":s["referee"]["total_score"],"tasks":s["referee"]["task_count"],
-        "repeats":s["referee"]["repeated_observation_count"],"legal":s["referee"]["legal"]}
-        for s in summaries]
-    front=pareto(candidates); write_csv(ROOT/"M2_PARETO_FRONT.csv",front)
-    metadata={"created_utc":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
-        "c_windows_sha256":sha256(CACHE/"C_optical/windows.csv"),"config_sha256":sha256(CONFIG),
-        "priority_sha256":sha256(PRIORITY),"window_index_build_elapsed_s":index_elapsed,
-        "uncovered_reason_counts":dict(Counter(row["uncovered_reason"] for row in uncovered)),
-        "hybrid_repeat_diagnosis":hybrid_diag,"profiles":summaries,"pareto":front}
-    (OUT/"analysis.json").write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    index.close()
-    print(json.dumps(metadata,ensure_ascii=False,indent=2))
+    parser = argparse.ArgumentParser(description="Archived October experiment runner; unavailable for current August D results.")
+    parser.parse_args()
+    raise SystemExit('Archived October local-search report runner is disabled because its seed schedules belong to the old horizon. Use run_m2_baselines.py and then the D-aware unified optimizer.')
 
 
 if __name__=="__main__": main()

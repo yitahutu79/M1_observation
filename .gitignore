@@ -22,6 +22,10 @@ m1_validation/final/standalone_smoke_*
 # Formal M1 caches are delivered out-of-band and verified by SHA-256.
 m1_validation/formal_20261001/
 m1_validation/formal_20261001_v2/
+m1_validation/formal_20261001_illumination/
+m1_validation/formal_20261001_illumination_100/
+m1_validation/formal_20261001_illumination_smoke/
+m1_validation/formal_20260801_candidate/
 
 # Local regression, profiling, and prototype outputs.
 m1_validation/code_fix_regression/
@@ -93,3 +97,8 @@ artifacts/FAMOU_*.tar.gz.sha256
 
 # Superseded local reports retained for reference, not collaboration entry points.
 local_archive/
+
+# August M2 smoke/baseline and optimizer run products (competition-derived schedules)
+m2_results/aug2026_smoke_*/
+m2_results/aug2026_baselines/
+m2_results/aug2026_optimizer_runs/
