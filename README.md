@@ -2,6 +2,10 @@
 
 This repository contains the current M1 window pipeline and M2 static scheduler for the Baidu Famou Cup task. The active planning interval is **2026-08-01 00:00 through 2026-08-07 00:00 UTC**.
 
+## Local user interface
+
+The upload-first Chinese interface for the current August M2 baseline is documented in [`docs/product/LOCAL_UI_GUIDE.md`](docs/product/LOCAL_UI_GUIDE.md). Start it with `.venv/bin/python web_app.py`; it binds to localhost only and refuses inputs that do not match the frozen D-window hashes.
+
 ## What A, B, C, and D mean
 
 The layers progressively narrow when a satellite can be scheduled for an optical observation:
