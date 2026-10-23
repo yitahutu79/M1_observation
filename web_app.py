@@ -6,6 +6,7 @@ only when their bytes match the inputs pinned by the released D-layer cache.
 from __future__ import annotations
 
 import base64
+import csv
 import hashlib
 import json
 import threading
@@ -18,6 +19,7 @@ from urllib.parse import urlparse
 
 from m2_referee import referee
 from m2_scheduler import schedule_baseline, write_schedule
+from satellite_status import build_satellite_status
 
 ROOT = Path(__file__).resolve().parent
 CONFIG = ROOT / "m2_config.json"
@@ -27,6 +29,7 @@ RUNS = ROOT / "output/ui_runs"
 UI = ROOT / "web/index.html"
 MAX_TLE_BYTES = 10 * 1024 * 1024
 MAX_STATION_BYTES = 64 * 1024
+MAX_SCHEDULE_BYTES = 20 * 1024 * 1024
 ALGORITHMS = {
     "coverage_score_hybrid": "覆盖与得分平衡（推荐）",
     "first_observation_first": "优先覆盖更多目标",
@@ -34,6 +37,9 @@ ALGORITHMS = {
 }
 JOBS: dict[str, dict] = {}
 LOCK = threading.Lock()
+ANALYSIS_LOCK = threading.Lock()
+ANALYSIS_CACHE: dict[str, dict] = {}
+LATEST_ANALYSIS: dict | None = None
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -102,6 +108,37 @@ def check_uploads(tle: bytes, stations: bytes) -> dict:
             "time_scale": "UTC"}
 
 
+def satellite_analysis(schedule_csv: bytes | None) -> dict:
+    global LATEST_ANALYSIS
+    if schedule_csv is not None and len(schedule_csv) > MAX_SCHEDULE_BYTES:
+        raise ValueError("排程CSV最大20 MB")
+    schedule_sha = hashlib.sha256(schedule_csv).hexdigest() if schedule_csv is not None else "no-schedule"
+    with ANALYSIS_LOCK:
+        if schedule_sha not in ANALYSIS_CACHE:
+            from m2_scheduler import validate_cache_identity
+            validate_cache_identity(CACHE, CONFIG)
+            report = build_satellite_status(
+                official_input_paths()["tle"], CACHE.parent / "A_orbit/target_status.csv",
+                CACHE, schedule_csv=schedule_csv, priority_path=PRIORITY,
+            )
+            ANALYSIS_CACHE[schedule_sha] = report
+        LATEST_ANALYSIS = ANALYSIS_CACHE[schedule_sha]
+        return LATEST_ANALYSIS
+
+
+def analysis_csv_bytes(report: dict) -> bytes:
+    records = report["records"]
+    if not records:
+        return b""
+    fields = list(records[0])
+    import io
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(records)
+    return output.getvalue().encode("utf-8-sig")
+
+
 def run_job(job_id: str, target_limit: int, algorithm: str) -> None:
     job = JOBS[job_id]
     out = RUNS / job_id
@@ -150,7 +187,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def read_json(self):
         length = int(self.headers.get("Content-Length", "0"))
-        if length > MAX_TLE_BYTES * 2:
+        if length > MAX_SCHEDULE_BYTES * 4 // 3 + 1024 * 1024:
             raise ValueError("上传内容过大")
         return json.loads(self.rfile.read(length))
 
@@ -163,6 +200,18 @@ class Handler(BaseHTTPRequestHandler):
             body = UI.read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        if path == "/api/analysis.csv":
+            if LATEST_ANALYSIS is None:
+                self.send_json(404, {"error": "请先运行卫星状态分析"})
+                return
+            body = analysis_csv_bytes(LATEST_ANALYSIS)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/csv; charset=utf-8")
+            self.send_header("Content-Disposition", 'attachment; filename="satellite_status_analysis.csv"')
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -198,6 +247,11 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         try:
             payload = self.read_json()
+            if path == "/api/analysis":
+                encoded_schedule = payload.get("schedule_base64")
+                schedule_data = base64.b64decode(encoded_schedule, validate=True) if encoded_schedule else None
+                self.send_json(200, satellite_analysis(schedule_data))
+                return
             tle = base64.b64decode(payload.get("tle_base64", ""), validate=True)
             stations = base64.b64decode(payload.get("stations_base64", ""), validate=True)
             if not tle or len(tle) > MAX_TLE_BYTES or not stations or len(stations) > MAX_STATION_BYTES:

@@ -4,7 +4,7 @@ This repository contains the current M1 window pipeline and M2 static scheduler 
 
 ## Local user interface
 
-The upload-first Chinese interface for the current August M2 baseline is documented in [`docs/product/LOCAL_UI_GUIDE.md`](docs/product/LOCAL_UI_GUIDE.md). Start it with `.venv/bin/python web_app.py`; it binds to localhost only and refuses inputs that do not match the frozen D-window hashes.
+The upload-first Chinese interface for the current August M2 baseline includes a satellite status and observability view. See [`docs/product/LOCAL_UI_GUIDE.md`](docs/product/LOCAL_UI_GUIDE.md); start it with `.venv/bin/python web_app.py`. It binds to localhost only and refuses scheduling inputs that do not match the frozen D-window hashes.
 
 ## What A, B, C, and D mean
 
