@@ -147,17 +147,25 @@ def analysis_csv_bytes(report: dict) -> bytes:
 
 def run_job(job_id: str, target_limit: int, algorithm: str) -> None:
     job = JOBS[job_id]
+    started = time.perf_counter()
     out = RUNS / job_id
     out.mkdir(parents=True, exist_ok=False)
     schedule_path = out / "schedule.csv"
     violation_path = out / "violations.csv"
     try:
-        job.update(state="running", message="正在生成排程…")
+        job.update(state="running", stage="scheduling", elapsed_s=0.0,
+                   message="第1/2阶段：生成排程")
         rows, scheduler_metrics = schedule_baseline(CACHE, PRIORITY, CONFIG, target_limit, algorithm)
         write_schedule(schedule_path, rows)
-        job.update(message="排程已生成，独立裁判正在逐项验收…")
+        scheduling_elapsed = time.perf_counter() - started
+        job.update(stage="referee", tasks_generated=len(rows),
+                   scheduling_elapsed_s=scheduler_metrics["scheduling_elapsed_s"],
+                   elapsed_s=time.perf_counter() - started,
+                   message=f"第2/2阶段：独立Referee验收（{len(rows):,}项任务）")
         referee_started = time.perf_counter()
         decision = referee(schedule_path, CACHE, PRIORITY, CONFIG, target_limit, violation_path)
+        referee_elapsed = time.perf_counter() - referee_started
+        total_elapsed = time.perf_counter() - started
         result = {
             "legal": decision["legal"], "unique_covered_targets": decision["unique_covered_targets"],
             "coverage_rate": decision["coverage_rate"], "total_score": decision["total_score"],
@@ -166,15 +174,17 @@ def run_job(job_id: str, target_limit: int, algorithm: str) -> None:
             "overall_station_utilization": decision["overall_station_utilization"],
             "violation_count": decision["violation_count"], "priority_metrics": decision["priority_metrics"],
             "scheduling_elapsed_s": scheduler_metrics["scheduling_elapsed_s"],
-            "referee_elapsed_s": time.perf_counter() - referee_started, "algorithm": algorithm,
-            "target_limit": target_limit,
+            "referee_elapsed_s": referee_elapsed, "total_elapsed_s": total_elapsed,
+            "algorithm": algorithm, "target_limit": target_limit,
             "planning": "2026-08-01 00:00 至 2026-08-07 00:00 UTC",
         }
         (out / "summary.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        job.update(state="complete", message="独立裁判验收完成", result=result,
+        job.update(state="complete", stage="complete", elapsed_s=total_elapsed,
+                   message="独立裁判验收完成", result=result,
                    schedule=f"/api/jobs/{job_id}/schedule", violations=f"/api/jobs/{job_id}/violations")
     except Exception as exc:  # surfaced in the UI; job never reports unverified success
-        job.update(state="failed", message=f"运行失败：{type(exc).__name__}: {exc}")
+        job.update(state="failed", stage="failed", elapsed_s=time.perf_counter() - started,
+                   message=f"运行失败：{type(exc).__name__}: {exc}")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -261,7 +271,7 @@ class Handler(BaseHTTPRequestHandler):
             tle = base64.b64decode(payload.get("tle_base64", ""), validate=True)
             stations = base64.b64decode(payload.get("stations_base64", ""), validate=True)
             if not tle or len(tle) > MAX_TLE_BYTES or not stations or len(stations) > MAX_STATION_BYTES:
-                raise ValueError("TLE最大10 MB，站点文件最大64 KB，且都不能为空")
+                raise ValueError("调度工作台需要同时选择TLE轨道文件（≤10 MB）和地面站文件（≤64 KB）。排程CSV请在“卫星状态分析”页签上传。")
             checked = check_uploads(tle, stations)
             if path == "/api/validate":
                 self.send_json(200, checked)
@@ -278,7 +288,8 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("请选择1000或10000目标，以及有效的调度基线")
             job_id = uuid.uuid4().hex[:12]
             with LOCK:
-                JOBS[job_id] = {"id": job_id, "state": "queued", "message": "任务已排队",
+                JOBS[job_id] = {"id": job_id, "state": "queued", "stage": "queued",
+                                "elapsed_s": 0.0, "message": "任务已排队",
                                 "created_utc": datetime.now(timezone.utc).isoformat()}
             threading.Thread(target=run_job, args=(job_id, target_limit, algorithm), daemon=True).start()
             self.send_json(202, {"job_id": job_id, "state": "queued"})
@@ -294,7 +305,8 @@ def main():
     RUNS.mkdir(parents=True, exist_ok=True)
     host = "127.0.0.1"
     server = None
-    for port in range(8765, 8781):
+    # Avoid 8765, which is commonly used by an unrelated local workbench.
+    for port in range(8766, 8781):
         try:
             server = ThreadingHTTPServer((host, port), Handler)
             break

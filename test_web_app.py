@@ -75,6 +75,55 @@ class UploadValidationTests(unittest.TestCase):
         self.assertEqual(observations, {})
         self.assertEqual(stats, {"timed_task_count": 0, "untimed_task_count": 1})
 
+
+    def test_analysis_endpoint_accepts_request_without_tle_or_station_payload(self):
+        import threading
+        from http.server import ThreadingHTTPServer
+        from unittest.mock import patch
+        from urllib.request import Request, urlopen
+        from web_app import Handler
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            with patch("web_app.satellite_analysis", return_value={"summary": {"target_count": 1}}) as analyze:
+                request = Request(
+                    f"http://127.0.0.1:{server.server_port}/api/analysis",
+                    data=b"{}", headers={"Content-Type": "application/json"}, method="POST",
+                )
+                with urlopen(request, timeout=3) as response:
+                    result = json.loads(response.read())
+                self.assertEqual(result["summary"]["target_count"], 1)
+                analyze.assert_called_once_with(None)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
+    def test_run_job_records_stage_and_end_to_end_elapsed_time(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from web_app import run_job
+        decision = {
+            "legal": True, "unique_covered_targets": 0, "coverage_rate": 0.0,
+            "total_score": 0.0, "task_count": 0, "repeated_observation_count": 0,
+            "overall_station_utilization": 0.0, "violation_count": 0, "priority_metrics": {},
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            with patch("web_app.RUNS", Path(temp)), \
+                 patch("web_app.schedule_baseline", return_value=([], {"scheduling_elapsed_s": 0.01})), \
+                 patch("web_app.referee", return_value=decision):
+                jobs = __import__("web_app").JOBS
+                jobs["progress-test"] = {}
+                run_job("progress-test", 1000, "coverage_score_hybrid")
+                job = jobs.pop("progress-test")
+        self.assertEqual(job["state"], "complete")
+        self.assertEqual(job["stage"], "complete")
+        self.assertGreaterEqual(job["elapsed_s"], 0.0)
+        self.assertGreaterEqual(job["result"]["total_elapsed_s"], 0.0)
+        self.assertIn("referee_elapsed_s", job["result"])
+
     def test_analysis_summarizes_frozen_target_statuses(self):
         from pathlib import Path
         from satellite_status import build_satellite_status
