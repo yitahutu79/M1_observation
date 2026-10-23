@@ -41,6 +41,40 @@ class UploadValidationTests(unittest.TestCase):
         self.assertEqual(counts["50574"], 2)
         self.assertEqual(len(digest), 64)
 
+
+    def test_schedule_parser_exposes_utc_times_and_observation_durations(self):
+        from satellite_status import _load_schedule_observations
+        data = (
+            b"task_id,target_id,station_id,start_s,end_s,duration_s,priority,score\n"
+            b"t1,50574,1,120,240,120,high,3\n"
+            b"t2,50574,4,172920,173160,240,high,5\n"
+        )
+        counts, observations, digest, stats = _load_schedule_observations(data)
+        self.assertEqual(counts["50574"], 2)
+        self.assertEqual(observations["50574"][0]["start_utc"], "2026-08-01T00:02:00.000Z")
+        self.assertEqual(observations["50574"][0]["end_utc"], "2026-08-01T00:04:00.000Z")
+        self.assertEqual(observations["50574"][0]["duration_s"], 120)
+        self.assertTrue(all(item["duration_in_120_240_s_range"] for item in observations["50574"]))
+        self.assertEqual(observations["50574"][1]["station_id"], "4")
+        self.assertEqual(stats, {"timed_task_count": 2, "untimed_task_count": 0})
+        self.assertEqual(len(digest), 64)
+
+    def test_schedule_parser_rejects_duration_mismatch(self):
+        from satellite_status import _load_schedule_observations
+        with self.assertRaisesRegex(ValueError, "disagrees"):
+            _load_schedule_observations(
+                b"target_id,start_s,end_s,duration_s\n50574,0,120,121\n"
+            )
+
+    def test_schedule_csv_without_times_remains_count_only(self):
+        from satellite_status import _load_schedule_observations
+        counts, observations, _digest, stats = _load_schedule_observations(
+            b"target_id,station_id\n50574,1\n"
+        )
+        self.assertEqual(counts["50574"], 1)
+        self.assertEqual(observations, {})
+        self.assertEqual(stats, {"timed_task_count": 0, "untimed_task_count": 1})
+
     def test_analysis_summarizes_frozen_target_statuses(self):
         from pathlib import Path
         from satellite_status import build_satellite_status
@@ -69,6 +103,10 @@ class UploadValidationTests(unittest.TestCase):
         )
         row = next(item for item in with_schedule["records"] if item["target_id"] == "50574")
         self.assertEqual(row["scheduled_visits"], 2)
+        self.assertEqual(row["scheduled_timed_visits"], 0)
+        self.assertEqual(row["scheduled_observations"], [])
+        self.assertNotIn("tle_age_days", row)
+        self.assertNotIn("reentry_status", row)
         self.assertEqual(row["schedule_status"], "已排程（2次）")
 
 

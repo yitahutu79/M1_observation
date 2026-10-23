@@ -135,7 +135,13 @@ def analysis_csv_bytes(report: dict) -> bytes:
     output = io.StringIO(newline="")
     writer = csv.DictWriter(output, fieldnames=fields, lineterminator="\n")
     writer.writeheader()
-    writer.writerows(records)
+    for row in records:
+        encoded = {
+            key: json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+            if isinstance(value, (dict, list)) else value
+            for key, value in row.items()
+        }
+        writer.writerow(encoded)
     return output.getvalue().encode("utf-8-sig")
 
 

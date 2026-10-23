@@ -67,7 +67,7 @@ def orbit_summary(line2: str) -> dict:
     }
 
 
-def _load_tles(path: Path, reference_date: date) -> dict[str, dict]:
+def _load_tles(path: Path) -> dict[str, dict]:
     lines = path.read_text(encoding="utf-8-sig").splitlines()
     if len(lines) % 3:
         raise ValueError("TLE file must contain complete three-line records")
@@ -86,7 +86,6 @@ def _load_tles(path: Path, reference_date: date) -> dict[str, dict]:
             "target_id": target_id,
             "name": name[2:].strip(),
             "tle_epoch_utc": epoch.isoformat().replace("+00:00", "Z"),
-            "tle_age_days": round((datetime.combine(reference_date, datetime.min.time(), tzinfo=timezone.utc) - epoch).total_seconds() / 86400, 2),
             **orbit_summary(line2),
         }
     return satellites
@@ -106,18 +105,104 @@ def _load_a_status(path: Path) -> dict[str, dict]:
     return statuses
 
 
-def _load_schedule_counts(schedule_csv: bytes | None) -> tuple[Counter, str | None]:
+def _iso_utc(value: datetime) -> str:
+    return value.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def _parse_utc_datetime(value: str, field: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"invalid {field} UTC timestamp: {value!r}") from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _load_schedule_observations(schedule_csv: bytes | None):
     counts: Counter = Counter()
+    observations: dict[str, list[dict]] = {}
     if schedule_csv is None:
-        return counts, None
+        return counts, observations, None, {"timed_task_count": 0, "untimed_task_count": 0}
     text = schedule_csv.decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(text))
-    if not reader.fieldnames or "target_id" not in reader.fieldnames:
+    fields = set(reader.fieldnames or ())
+    if "target_id" not in fields:
         raise ValueError("schedule CSV must include a target_id column")
+    relative_pair = {"start_s", "end_s"}.issubset(fields)
+    utc_pair = {"start_utc", "end_utc"}.issubset(fields)
+    if ("start_s" in fields) != ("end_s" in fields):
+        raise ValueError("schedule CSV must include both start_s and end_s")
+    if ("start_utc" in fields) != ("end_utc" in fields):
+        raise ValueError("schedule CSV must include both start_utc and end_utc")
     digest = hashlib.sha256(schedule_csv).hexdigest()
+    timed_count = untimed_count = 0
     for row_number, row in enumerate(reader, 2):
+        if not (row.get("target_id") or "").strip():
+            continue
         target_id = canonical_target_id(row["target_id"])
         counts[target_id] += 1
+        start_raw = (row.get("start_s") or "").strip() if relative_pair else ""
+        end_raw = (row.get("end_s") or "").strip() if relative_pair else ""
+        start_utc_raw = (row.get("start_utc") or "").strip() if utc_pair else ""
+        end_utc_raw = (row.get("end_utc") or "").strip() if utc_pair else ""
+        if relative_pair and (start_raw or end_raw):
+            if not start_raw or not end_raw:
+                raise ValueError(f"schedule row {row_number} has an incomplete start_s/end_s pair")
+            try:
+                start_s, end_s = float(start_raw), float(end_raw)
+            except ValueError as exc:
+                raise ValueError(f"schedule row {row_number} has invalid relative time") from exc
+            if not (math.isfinite(start_s) and math.isfinite(end_s) and end_s > start_s):
+                raise ValueError(f"schedule row {row_number} must have finite start_s < end_s")
+            start_dt = START_UTC + timedelta(seconds=start_s)
+            end_dt = START_UTC + timedelta(seconds=end_s)
+        elif utc_pair and (start_utc_raw or end_utc_raw):
+            if not start_utc_raw or not end_utc_raw:
+                raise ValueError(f"schedule row {row_number} has an incomplete UTC time pair")
+            start_dt = _parse_utc_datetime(start_utc_raw, "start_utc")
+            end_dt = _parse_utc_datetime(end_utc_raw, "end_utc")
+            if end_dt <= start_dt:
+                raise ValueError(f"schedule row {row_number} must have start_utc < end_utc")
+        else:
+            untimed_count += 1
+            continue
+        derived_duration = (end_dt - start_dt).total_seconds()
+        duration_raw = (row.get("duration_s") or "").strip()
+        if duration_raw:
+            try:
+                duration_s = float(duration_raw)
+            except ValueError as exc:
+                raise ValueError(f"schedule row {row_number} has invalid duration_s") from exc
+            if not math.isfinite(duration_s) or duration_s <= 0:
+                raise ValueError(f"schedule row {row_number} must have positive finite duration_s")
+            if abs(duration_s - derived_duration) > 0.05:
+                raise ValueError(f"schedule row {row_number} duration_s disagrees with start/end by more than 0.05 s")
+        else:
+            duration_s = derived_duration
+        station = (row.get("station_id") or row.get("station") or "").strip()
+        if station.isdigit():
+            station = str(int(station))
+        observations.setdefault(target_id, []).append({
+            "task_id": (row.get("task_id") or f"row-{row_number}").strip(),
+            "station_id": station,
+            "start_utc": _iso_utc(start_dt),
+            "end_utc": _iso_utc(end_dt),
+            "duration_s": round(duration_s, 3),
+            "duration_in_120_240_s_range": 120.0 <= duration_s <= 240.0,
+            "priority": (row.get("priority") or "").strip(),
+            "score": (row.get("score") or "").strip(),
+            "visit_number": (row.get("visit_number") or "").strip(),
+        })
+        timed_count += 1
+    for rows in observations.values():
+        rows.sort(key=lambda item: (item["start_utc"], item["station_id"], item["task_id"]))
+    return counts, observations, digest, {"timed_task_count": timed_count, "untimed_task_count": untimed_count}
+
+
+def _load_schedule_counts(schedule_csv: bytes | None) -> tuple[Counter, str | None]:
+    """Compatibility helper for callers that only need target visit counts."""
+    counts, _observations, digest, _stats = _load_schedule_observations(schedule_csv)
     return counts, digest
 
 
@@ -127,7 +212,7 @@ def build_satellite_status(tle_path: Path, a_status_path: Path, d_cache: Path,
                            reference_date: date | None = None) -> dict:
     """Join TLE metadata, A propagation status, D opportunities, and optional plan."""
     reference_date = reference_date or datetime.now(timezone.utc).date()
-    satellites = _load_tles(tle_path, reference_date)
+    satellites = _load_tles(tle_path)
     a_statuses = _load_a_status(a_status_path)
     opportunity = {}
     d_path = d_cache / "windows.csv"
@@ -161,7 +246,7 @@ def build_satellite_status(tle_path: Path, a_status_path: Path, d_cache: Path,
                 item["max_window_s"] = max(item["max_window_s"], duration)
                 item["usable_stations"].add(station_id)
 
-    scheduled_counts, schedule_sha = _load_schedule_counts(schedule_csv)
+    scheduled_counts, scheduled_observations, schedule_sha, schedule_stats = _load_schedule_observations(schedule_csv)
     if priority_path is not None:
         from m2_scheduler import read_priority
         priorities = read_priority(priority_path)
@@ -189,6 +274,8 @@ def build_satellite_status(tle_path: Path, a_status_path: Path, d_cache: Path,
         else:
             physical_status = "D缓存中无窗口"
         visits = scheduled_counts.get(target_id, 0)
+        task_details = scheduled_observations.get(target_id, [])
+        scheduled_total_duration_s = sum(item["duration_s"] for item in task_details)
         if schedule_csv is None:
             schedule_status = "未导入排程"
         elif visits:
@@ -206,6 +293,9 @@ def build_satellite_status(tle_path: Path, a_status_path: Path, d_cache: Path,
             "schedule_status": schedule_status,
             "priority": priorities.get(target_id, "unassigned"),
             "scheduled_visits": visits,
+            "scheduled_timed_visits": len(task_details),
+            "scheduled_total_duration_s": round(scheduled_total_duration_s, 3),
+            "scheduled_observations": task_details,
             "d_window_count": d["d_window_count"],
             "usable_window_count_ge_120": d["usable_window_count_ge_120"],
             "total_usable_opportunity_s": round(d["total_usable_opportunity_s"], 3),
@@ -213,7 +303,6 @@ def build_satellite_status(tle_path: Path, a_status_path: Path, d_cache: Path,
             "station_count": len(d["usable_stations"]),
             "station_ids": ", ".join(str(x) for x in sorted(d["usable_stations"])),
             "first_window_utc": first_window_utc,
-            "reentry_status": "未判定（没有权威再入状态源）",
         })
 
     orbit_counts = Counter(row["orbit_type"] for row in records)
@@ -226,13 +315,6 @@ def build_satellite_status(tle_path: Path, a_status_path: Path, d_cache: Path,
         row["usable_window_count_ge_120"], row["total_usable_opportunity_s"],
         row["station_count"], row["target_id"],
     ))[:20]
-    ages = sorted(row["tle_age_days"] for row in records)
-    if not ages:
-        median_age = None
-    elif len(ages) % 2:
-        median_age = ages[len(ages) // 2]
-    else:
-        median_age = round((ages[len(ages) // 2 - 1] + ages[len(ages) // 2]) / 2, 2)
     summary = {
         "target_count": len(records),
         "reference_date_utc": reference_date.isoformat(),
@@ -244,12 +326,14 @@ def build_satellite_status(tle_path: Path, a_status_path: Path, d_cache: Path,
         "physical_status_counts": dict(physical_counts),
         "schedule_status_counts": dict(schedule_counts),
         "schedule_visit_count": sum(scheduled_counts.values()),
+        "schedule_timed_task_count": schedule_stats["timed_task_count"],
+        "schedule_untimed_task_count": schedule_stats["untimed_task_count"],
+        "schedule_total_duration_s": round(sum(item["duration_s"] for rows in scheduled_observations.values() for item in rows), 3),
         "schedule_unknown_target_count": len(set(scheduled_counts) - set(satellites)) if schedule_csv is not None else 0,
-        "tle_age_days_median": median_age,
         "schedule_imported": schedule_csv is not None,
         "schedule_sha256": schedule_sha,
         "d_windows_sha256": d_sha,
         "hardest_targets": hardest,
-        "scope_note": "机会来自D层；站点机会时长是跨站窗口时长之和，可能在同一时刻重叠。轨道类型为TLE要素推导的展示性启发分类；传播异常不等于确认脱轨。年龄指TLE历元距分析日，不是卫星自发射以来的年龄。",
+        "scope_note": "机会来自D层；站点机会时长是跨站窗口时长之和，可能在同一时刻重叠。导入的排程时刻是计划观测时段，不代表已执行观测日志；每次时长按起止时间计算或核对。轨道类型为TLE要素推导的展示性启发分类；传播异常不等于确认脱轨。观测时间来自排程起止时刻；TLE历元只标明轨道数据对应的时间。",
     }
     return {"summary": summary, "records": records}
