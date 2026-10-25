@@ -4,7 +4,7 @@ This repository contains the current M1 window pipeline and M2 static scheduler 
 
 ## Local user interface
 
-The upload-first Chinese interface for the current August M2 baseline includes a satellite status and observability view. See [`docs/product/LOCAL_UI_GUIDE.md`](docs/product/LOCAL_UI_GUIDE.md); start it with `.venv/bin/python web_app.py`. It binds to localhost only and refuses scheduling inputs that do not match the frozen D-window hashes.
+The upload-first Chinese interface for the current August M2 baseline includes five presentation views: station map/load, six-day station timeline, baseline comparison, referee/weather, and satellite status analysis. See [`docs/product/LOCAL_UI_GUIDE.md`](docs/product/LOCAL_UI_GUIDE.md); start it with `.venv/bin/python web_app.py`. It binds to localhost only and refuses scheduling inputs that do not match the frozen D-window hashes. The station map is a coordinate schematic, and weather is an optional uploaded overlay rather than an input to scoring or scheduling.
 
 ## What A, B, C, and D mean
 

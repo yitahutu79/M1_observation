@@ -147,7 +147,7 @@ class UploadValidationTests(unittest.TestCase):
             root / "data/轨道.txt",
             root / "m1_validation/formal_20260801_candidate/A_orbit/target_status.csv",
             root / "m1_validation/formal_20260801_candidate/D_illumination_refined_v2",
-            schedule_csv=b"target_id,station_id\n50574,1\n50574,2\n",
+            schedule_csv=b"target_id,station_id\n50574,1\n50574,2\n99999,1\n",
             priority_path=root / "data/优先级.zip",
         )
         row = next(item for item in with_schedule["records"] if item["target_id"] == "50574")
@@ -157,6 +157,53 @@ class UploadValidationTests(unittest.TestCase):
         self.assertNotIn("tle_age_days", row)
         self.assertNotIn("reentry_status", row)
         self.assertEqual(row["schedule_status"], "已排程（2次）")
+        self.assertEqual(with_schedule["summary"]["schedule_covered_target_count"], 1)
+        self.assertAlmostEqual(with_schedule["summary"]["schedule_coverage_rate"], 1 / 10000)
+        self.assertEqual(with_schedule["summary"]["schedule_targets_without_any_task_count"], 9999)
+        self.assertEqual(with_schedule["summary"]["schedule_unknown_target_count"], 1)
+
+    def test_dashboard_catalog_exposes_ten_stations_and_three_frozen_baselines(self):
+        from web_app import dashboard_catalog
+        result = dashboard_catalog()
+        self.assertEqual(len(result["stations"]), 10)
+        self.assertEqual(len(result["plans"]), 3)
+        self.assertTrue(all(plan["referee_recorded"] for plan in result["plans"]))
+        self.assertFalse(result["weather_available"])
+
+    def test_dashboard_schedule_reader_requires_project_task_fields(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from web_app import read_plan_rows
+        with TemporaryDirectory() as temp:
+            path = Path(temp) / "schedule.csv"
+            path.write_text(
+                "task_id,target_id,station_id,start_s,end_s,priority\n"
+                "x,50574,4,120,240,high\n", encoding="utf-8"
+            )
+            tasks = read_plan_rows(path)
+        self.assertEqual(len(tasks), 1)
+        self.assertEqual(tasks[0]["station_id"], 4)
+        self.assertEqual(tasks[0]["duration_s"], 120)
+        self.assertIsNone(tasks[0]["score"])
+
+    def test_uploaded_dashboard_plan_uses_independent_referee_without_modifying_source(self):
+        from unittest.mock import patch
+        from web_app import inspect_uploaded_plan
+        source = (
+            b"task_id,target_id,station_id,start_s,end_s,duration_s\n"
+            b"x,50574,4,120,240,120\n"
+        )
+        before = __import__("hashlib").sha256(source).hexdigest()
+        metrics = {"legal": True, "violation_count": 0, "unique_covered_targets": 1,
+                   "coverage_rate": 0.0001, "total_score": 3.0, "task_count": 1,
+                   "repeated_observation_count": 0, "overall_station_utilization": 0.0,
+                   "priority_metrics": {}, "station_metrics": {}}
+        with patch("web_app.referee", return_value=metrics) as referee_mock:
+            result = inspect_uploaded_plan("test.csv", source)
+        self.assertTrue(result["metrics"]["legal"])
+        self.assertEqual(result["tasks"][0]["target_id"], "50574")
+        self.assertEqual(__import__("hashlib").sha256(source).hexdigest(), before)
+        self.assertEqual(referee_mock.call_args.args[4], 10000)
 
 
 if __name__ == "__main__":

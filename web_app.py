@@ -9,6 +9,8 @@ import base64
 import csv
 import hashlib
 import json
+import re
+import tempfile
 import threading
 import time
 import uuid
@@ -27,6 +29,7 @@ PRIORITY = ROOT / "data/优先级.zip"
 CACHE = ROOT / "m1_validation/formal_20260801_candidate/D_illumination_refined_v2"
 RUNS = ROOT / "output/ui_runs"
 UI = ROOT / "web/index.html"
+WEB = ROOT / "web"
 MAX_TLE_BYTES = 10 * 1024 * 1024
 MAX_STATION_BYTES = 64 * 1024
 MAX_SCHEDULE_BYTES = 20 * 1024 * 1024
@@ -40,6 +43,23 @@ LOCK = threading.Lock()
 ANALYSIS_LOCK = threading.Lock()
 ANALYSIS_CACHE: dict[str, dict] = {}
 LATEST_ANALYSIS: dict | None = None
+BASELINE_PLANS = {
+    "coverage_score_hybrid": {
+        "label": "平衡覆盖与得分（基线）",
+        "schedule": ROOT / "m2_results/aug2026_baseline_v2/targets_10000/coverage_score_hybrid_schedule.csv",
+        "summary": ROOT / "m2_results/aug2026_baseline_v2/targets_10000/coverage_score_hybrid_summary.json",
+    },
+    "first_observation_first": {
+        "label": "覆盖优先（基线）",
+        "schedule": ROOT / "m2_results/aug2026_baseline_v2/targets_10000/first_observation_first_schedule.csv",
+        "summary": ROOT / "m2_results/aug2026_baseline_v2/targets_10000/first_observation_first_summary.json",
+    },
+    "total_score_first": {
+        "label": "得分优先（基线）",
+        "schedule": ROOT / "m2_results/aug2026_baseline_v2/targets_10000/total_score_first_schedule.csv",
+        "summary": ROOT / "m2_results/aug2026_baseline_v2/targets_10000/total_score_first_summary.json",
+    },
+}
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -145,6 +165,127 @@ def analysis_csv_bytes(report: dict) -> bytes:
     return output.getvalue().encode("utf-8-sig")
 
 
+def read_station_catalog(path: Path | None = None) -> list[dict]:
+    """Read the project station text without relying on UI-entered coordinates."""
+    import re
+    path = path or ROOT / "data/站址.txt"
+    pattern = re.compile(r"^\s*(\d+)\s*[：:]\s*([+-]?[\d.]+)\s*,\s*([+-]?[\d.]+)\s*,\s*([+-]?[\d.]+)")
+    result = []
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        match = pattern.match(line)
+        if match:
+            station_id, lon, lat, elev = match.groups()
+            result.append({"station_id": int(station_id), "longitude_deg": float(lon),
+                           "latitude_deg": float(lat), "elevation_m": float(elev)})
+    if len(result) != 10 or len({item["station_id"] for item in result}) != 10:
+        raise ValueError("正式站点文件应包含10个唯一站点")
+    return sorted(result, key=lambda item: item["station_id"])
+
+
+def read_plan_rows(path: Path) -> list[dict]:
+    rows = []
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        required = {"target_id", "station_id", "start_s", "end_s"}
+        if not reader.fieldnames or not required.issubset(reader.fieldnames):
+            raise ValueError("排程CSV必须包含 target_id、station_id、start_s、end_s")
+        for number, raw in enumerate(reader, 2):
+            try:
+                start_s, end_s = float(raw["start_s"]), float(raw["end_s"])
+                station_id = int(raw["station_id"])
+                if not (0 <= start_s < end_s <= 6 * 86400 and 1 <= station_id <= 10):
+                    raise ValueError("task time or station outside configured range")
+                rows.append({"task_id": raw.get("task_id", f"row-{number}"),
+                             "target_id": raw["target_id"], "station_id": station_id,
+                             "start_s": start_s, "end_s": end_s,
+                             "duration_s": end_s - start_s,
+                             "priority": raw.get("priority", "unknown"),
+                             "score": _float_or_none(raw.get("score")),
+                             "source_line": number})
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"排程CSV第 {number} 行无法读取：{exc}") from exc
+    return rows
+
+
+def _float_or_none(value):
+    try:
+        return float(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def dashboard_catalog() -> dict:
+    plans = []
+    for plan_id, item in BASELINE_PLANS.items():
+        if not item["schedule"].is_file() or not item["summary"].is_file():
+            continue
+        data = json.loads(item["summary"].read_text(encoding="utf-8"))
+        ref = data.get("referee", {})
+        plans.append({"id": plan_id, "label": item["label"],
+                      "sha256": _file_sha256(item["schedule"]),
+                      "referee_recorded": bool(ref.get("legal")),
+                      "metrics": ref})
+    return {"stations": read_station_catalog(), "plans": plans,
+            "planning_start_utc": "2026-08-01T00:00:00Z",
+            "planning_end_utc": "2026-08-07T00:00:00Z",
+            "weather_available": False}
+
+
+def dashboard_plan(plan_id: str) -> dict:
+    if plan_id in BASELINE_PLANS:
+        item = BASELINE_PLANS[plan_id]
+        if not item["schedule"].is_file() or not item["summary"].is_file():
+            raise ValueError("该基线排程文件不完整")
+        summary = json.loads(item["summary"].read_text(encoding="utf-8"))
+        return {"id": plan_id, "label": item["label"], "sha256": _file_sha256(item["schedule"]),
+                "validation_source": "recorded_referee_summary", "metrics": summary.get("referee", {}),
+                "tasks": read_plan_rows(item["schedule"]), "violations": []}
+    if re.fullmatch(r"[a-f0-9]{12}", plan_id) and plan_id in JOBS:
+        job = JOBS[plan_id]
+        path = RUNS / plan_id / "schedule.csv"
+        if job.get("state") != "complete" or not path.is_file():
+            raise ValueError("此网页任务尚无完整排程")
+        result = job.get("result", {})
+        violation_path = RUNS / plan_id / "violations.csv"
+        violations = []
+        if violation_path.is_file():
+            with violation_path.open(encoding="utf-8", newline="") as handle:
+                violations = list(csv.DictReader(handle))
+        return {"id": plan_id, "label": f"网页运行 {plan_id}", "sha256": _file_sha256(path),
+                "validation_source": "current_session_referee", "metrics": result,
+                "tasks": read_plan_rows(path), "violations": violations}
+    raise ValueError("未知方案编号")
+
+
+def inspect_uploaded_plan(name: str, schedule_bytes: bytes) -> dict:
+    if not schedule_bytes or len(schedule_bytes) > MAX_SCHEDULE_BYTES:
+        raise ValueError("排程CSV不能为空且不能超过20 MB")
+    RUNS.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="dashboard-audit-", dir=RUNS) as temp_name:
+        temp = Path(temp_name)
+        schedule_path, violation_path = temp / "schedule.csv", temp / "violations.csv"
+        schedule_path.write_bytes(schedule_bytes)
+        # Parse before invoking the Referee so malformed rows get a clear UI error.
+        tasks = read_plan_rows(schedule_path)
+        result = referee(schedule_path, CACHE, PRIORITY, CONFIG, 10000, violation_path)
+        violations = []
+        if violation_path.is_file():
+            with violation_path.open(encoding="utf-8", newline="") as handle:
+                violations = list(csv.DictReader(handle))
+        return {"id": "uploaded-" + sha256_bytes(schedule_bytes)[:12],
+                "label": name[:120] or "上传方案", "sha256": sha256_bytes(schedule_bytes),
+                "validation_source": "independent_referee_this_session",
+                "metrics": result, "tasks": tasks, "violations": violations}
+
+
 def run_job(job_id: str, target_limit: int, algorithm: str) -> None:
     job = JOBS[job_id]
     started = time.perf_counter()
@@ -172,6 +313,7 @@ def run_job(job_id: str, target_limit: int, algorithm: str) -> None:
             "task_count": decision["task_count"],
             "repeated_observation_count": decision["repeated_observation_count"],
             "overall_station_utilization": decision["overall_station_utilization"],
+            "station_metrics": decision.get("station_metrics", {}),
             "violation_count": decision["violation_count"], "priority_metrics": decision["priority_metrics"],
             "scheduling_elapsed_s": scheduler_metrics["scheduling_elapsed_s"],
             "referee_elapsed_s": referee_elapsed, "total_elapsed_s": total_elapsed,
@@ -220,6 +362,32 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
+        if path in {"/dashboard.js", "/dashboard.css"}:
+            asset = WEB / path.rsplit("/", 1)[1]
+            if not asset.is_file():
+                self.send_error(404)
+                return
+            body = asset.read_bytes()
+            content_type = "application/javascript; charset=utf-8" if path.endswith(".js") else "text/css; charset=utf-8"
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        if path == "/api/dashboard/catalog":
+            try:
+                self.send_json(200, dashboard_catalog())
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                self.send_json(500, {"error": f"无法读取展示数据：{exc}"})
+            return
+        if path.startswith("/api/dashboard/plan/"):
+            plan_id = path.rsplit("/", 1)[-1]
+            try:
+                self.send_json(200, dashboard_plan(plan_id))
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                self.send_json(404, {"error": str(exc)})
+            return
         if path == "/api/analysis.csv":
             if LATEST_ANALYSIS is None:
                 self.send_json(404, {"error": "请先运行卫星状态分析"})
@@ -267,6 +435,11 @@ class Handler(BaseHTTPRequestHandler):
                 encoded_schedule = payload.get("schedule_base64")
                 schedule_data = base64.b64decode(encoded_schedule, validate=True) if encoded_schedule else None
                 self.send_json(200, satellite_analysis(schedule_data))
+                return
+            if path == "/api/dashboard/inspect":
+                encoded_schedule = payload.get("schedule_base64", "")
+                schedule_data = base64.b64decode(encoded_schedule, validate=True) if encoded_schedule else b""
+                self.send_json(200, inspect_uploaded_plan(payload.get("name", "上传方案"), schedule_data))
                 return
             tle = base64.b64decode(payload.get("tle_base64", ""), validate=True)
             stations = base64.b64decode(payload.get("stations_base64", ""), validate=True)

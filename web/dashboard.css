@@ -1,0 +1,47 @@
+.product-tabs{flex-wrap:wrap}
+.display-source-panel,.dashboard-source{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.display-source-panel{position:sticky;top:8px;z-index:4;padding:14px 18px}
+.display-source-panel>div:first-child{min-width:260px;flex:1}
+.display-source-panel select,.dashboard-source select,.dashboard-source input[type=file]{max-width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:white;font:inherit}
+.dashboard-source{margin:12px 0 18px}
+.dashboard-source label{display:flex;align-items:center;gap:8px}
+.map-layout,.compare-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,1fr);gap:18px;align-items:start}
+.map-frame{min-width:0;border:1px solid var(--line);border-radius:12px;background:#eff6ff;padding:10px;overflow:auto}
+#stationMapSvg{display:block;width:100%;min-width:500px;height:auto;border-radius:8px;background:linear-gradient(#eaf4ff,#f7fbff)}
+.map-grid{stroke:#b7c9dc;stroke-width:1;stroke-dasharray:4 5}
+.map-label{fill:#526579;font-size:13px}
+.station-marker{cursor:pointer;stroke:white;stroke-width:3;transition:r .15s}
+.station-marker:hover,.station-marker.selected{stroke:#172b59;stroke-width:5}
+.station-tag{fill:#172b59;font-size:15px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;pointer-events:none}
+.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0;color:#475467;font-size:12px}
+.legend-item{display:inline-flex;align-items:center;gap:5px}
+.legend-dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+.metrics-grid{display:grid;grid-template-columns:repeat(2,minmax(90px,1fr));gap:7px;margin:10px 0}
+.metric-chip{background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px}
+.metric-chip b{display:block;font-size:15px}
+.compact{max-height:420px}
+.timeline-axis{height:30px;margin-left:90px;position:relative;border-bottom:1px solid #ccd5e0;color:#667085;font-size:11px}
+.axis-tick{position:absolute;bottom:0;height:100%;border-left:1px solid #d6dde7;padding-left:4px;white-space:nowrap}
+.timeline-chart{display:flex;flex-direction:column;gap:7px;margin:10px 0 18px}
+.station-lane{display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px;align-items:center}
+.lane-label{font-size:12px;font-weight:700;color:#344054}
+.lane-track{height:34px;position:relative;border-radius:7px;background:repeating-linear-gradient(90deg,#f7f9fc 0,#f7f9fc calc(25% - 1px),#e3e8ef calc(25% - 1px),#e3e8ef 25%);border:1px solid #e3e8ef;overflow:hidden}
+.task-block{position:absolute;top:5px;height:22px;min-width:3px;border-radius:4px;border:1px solid #fff;cursor:pointer;overflow:hidden;color:#172b59;font-size:10px;line-height:20px;padding:0 2px;white-space:nowrap}
+.task-block.high{background:#f97066}.task-block.medium{background:#fdb022}.task-block.low{background:#84caff}.task-block.unknown{background:#98a2b3}
+.compare-layout{grid-template-columns:minmax(320px,.9fr) minmax(560px,1.5fr)}
+#paretoChart{width:100%;min-width:320px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.chart-axis{stroke:#667085;stroke-width:1.3}.chart-grid{stroke:#e4e7ec;stroke-width:1}.chart-text{fill:#475467;font-size:12px}.pareto-dot{stroke:white;stroke-width:2}
+.comparison-row.current{background:#eff8ff}
+.utilization-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.util-item{padding:9px;border:1px solid var(--line);border-radius:8px;background:#fbfcfe;font-size:12px}
+.util-track{height:7px;background:#e8edf5;border-radius:99px;margin-top:6px;overflow:hidden}.util-fill{height:100%;background:#315efb}
+.weather-wrap{overflow:auto;max-height:420px}
+.weather-heatmap{min-width:900px;padding:12px}
+.weather-row{display:grid;grid-template-columns:60px repeat(var(--weather-cols),minmax(7px,1fr));gap:2px;align-items:center;margin:3px 0}
+.weather-head{font-size:10px;color:#667085;text-align:center;min-width:8px}
+.weather-cell{height:17px;border-radius:2px;background:#eef2f6}.weather-site{font-size:11px;font-weight:700}
+.weather-cell.missing{background:#f2f4f7}.weather-cell.low-cloud{background:#75e0a7}.weather-cell.mid-cloud{background:#fdb022}.weather-cell.high-cloud{background:#f97066}
+.status-pass{color:#067647;background:#ecfdf3}.status-fail{color:#b42318;background:#fef3f2}.status-warn{color:#93370d;background:#fff4e5}
+code{background:#f2f4f7;padding:2px 4px;border-radius:4px}
+@media(max-width:980px){.map-layout,.compare-layout{grid-template-columns:1fr}.display-source-panel{position:static}.utilization-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.utilization-grid{grid-template-columns:1fr}.timeline-axis{margin-left:72px}.station-lane{grid-template-columns:62px minmax(0,1fr)}.display-source-panel{align-items:stretch}.display-source-panel select,.display-source-panel input,.display-source-panel button{width:100%}}
